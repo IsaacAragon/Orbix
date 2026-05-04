@@ -1,7 +1,6 @@
 package com.orbix.ui.screen
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,12 +32,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.orbix.ui.theme.BluePrimary
+import com.orbix.R
 import com.orbix.ui.theme.OrangePrimary
-import com.orbix.ui.theme.OrangeSecondary
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -57,15 +56,11 @@ fun LoginScreen(onLogin: () -> Unit) {
     )
     {
         Spacer(modifier = Modifier.height(200.dp))
-        Box(
-            modifier = Modifier.size(100.dp)
-                .clip(CircleShape)
-                .background(OrangeSecondary),
-            contentAlignment = Alignment.Center
+        Image(
+            modifier = Modifier.size(100.dp).clip(CircleShape),
+            painter = painterResource(id = R.drawable.orbix512),
+            contentDescription = null // Imagen decorativa
         )
-        {
-            Text("O", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = OrangePrimary)
-        }
         Spacer(modifier = Modifier.height(16.dp))
         Text("Orbix", fontSize = 28.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(40.dp))
