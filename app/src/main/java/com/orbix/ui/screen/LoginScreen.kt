@@ -57,7 +57,7 @@ fun LoginScreen(onLogin: () -> Unit) {
     {
         Spacer(modifier = Modifier.height(200.dp))
         Image(
-            modifier = Modifier.size(100.dp).clip(CircleShape),
+            modifier = Modifier.size(100.dp),
             painter = painterResource(id = R.drawable.orbix512),
             contentDescription = null // Imagen decorativa
         )
