@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import com.orbix.ui.screen.CarReviewScreen
 import com.orbix.ui.screen.HomeScreen
 import com.orbix.ui.screen.LoginScreen
+import com.orbix.ui.screen.MainScreen
 import com.orbix.ui.screen.UserReviewScreen
 
 @Composable
@@ -25,7 +26,7 @@ fun AppNavigation(modifier: Modifier) {
             )
         }
         composable<Home> {
-            HomeScreen(
+            MainScreen(
                 onLogout = {
                     navController.popBackStack()
                 },
@@ -35,7 +36,6 @@ fun AppNavigation(modifier: Modifier) {
                 onNavigateToUserReview = {
                     navController.navigate(UserReview)
                 }
-
             )
         }
         composable<CarReview> {
