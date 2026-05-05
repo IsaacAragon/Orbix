@@ -29,7 +29,7 @@ import com.orbix.ui.theme.OrangeSecondary
 @Composable
 fun CarReviewScreen(onReviewSubmitted: () -> Unit){
     ReviewScreenContent(
-        title = "Califica el Vehiculo",
+        title = "Califica el Usuario",
         subtitle = "Cuentanos como fue tu experiencia!",
         icon = Icons.Default.DirectionsCar,
         buttonText = "Enviar Reseña",
@@ -41,7 +41,7 @@ fun CarReviewScreen(onReviewSubmitted: () -> Unit){
 @Composable
 fun UserReviewScreen(onReviewSubmitted: () -> Unit) {
     ReviewScreenContent(
-        title = "Califica al Usuario",
+        title = "Califica el vehiculo",
         subtitle = "Cuentanos como fue tu experiencia!",
         icon = Icons.Default.Person,
         buttonText = "Enviar reseña",

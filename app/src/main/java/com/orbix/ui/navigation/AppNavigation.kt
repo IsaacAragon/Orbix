@@ -1,59 +1,93 @@
 package com.orbix.ui.navigation
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.orbix.ui.screen.CarReviewScreen
 import com.orbix.ui.screen.HomeScreen
 import com.orbix.ui.screen.LoginScreen
+import com.orbix.ui.screen.ReservationsScreen
 import com.orbix.ui.screen.UserReviewScreen
 
-@Composable
-fun AppNavigation(modifier: Modifier) {
-    val navController = rememberNavController()
-        NavHost(navController = navController, startDestination = Login)
-        {
-            composable<Login> {
-                LoginScreen(
-                    onLogin = {
-                        navController.navigate(Home) {
-                        }
-                    }
-                )
-            }
-            composable<Home> {
-                HomeScreen(
-                    onLogout = {
-                        navController.popBackStack()
-                    },
-                    onNavigateToCarReview = {
-                        navController.navigate(CarReview)
-                    },
-                    onNavigateToUserReview = {
-                        navController.navigate(UserReview)
-                    }
+// ✅ RUTAS (SIN CONFLICTOS)
+const val ROUTE_LOGIN = "login"
+const val ROUTE_HOME = "home"
+const val ROUTE_CAR_REVIEW = "car_review"
+const val ROUTE_USER_REVIEW = "user_review"
+const val ROUTE_RESERVATIONS = "reservations"
 
-                )
-            }
-            composable<CarReview> {
-                CarReviewScreen(
-                    onReviewSubmitted = {
-                        navController.popBackStack()
+@Composable
+fun AppNavigation() {
+
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = ROUTE_LOGIN
+    ) {
+
+        // 🔐 LOGIN
+        composable(ROUTE_LOGIN) {
+            LoginScreen(
+                onLogin = {
+                    navController.navigate(ROUTE_HOME) {
+                        popUpTo(ROUTE_LOGIN) { inclusive = true }
+                        launchSingleTop = true
                     }
-                )
-            }
-            composable<UserReview> {
-                UserReviewScreen(
-                    onReviewSubmitted = {
-                        navController.popBackStack()
-                    }
-                )
-            }
+                }
+            )
         }
 
+        // 🏠 HOME
+        composable(ROUTE_HOME) {
+            HomeScreen(
+                onLogout = {
+                    navController.navigate(ROUTE_LOGIN) {
+                        popUpTo(ROUTE_HOME) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToCarReview = {
+                    navController.navigate(ROUTE_CAR_REVIEW)
+                },
+                onNavigateToUserReview = {
+                    navController.navigate(ROUTE_USER_REVIEW)
+                },
+                onNavigateToReservations = {
+                    navController.navigate(ROUTE_RESERVATIONS)
+                }
+            )
+        }
+
+        // 🚗 CAR REVIEW
+        composable(ROUTE_CAR_REVIEW) {
+            CarReviewScreen(
+                onReviewSubmitted = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // 👤 USER REVIEW
+        composable(ROUTE_USER_REVIEW) {
+            UserReviewScreen(
+                onReviewSubmitted = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // 📅 RESERVAS
+        composable(ROUTE_RESERVATIONS) {
+            ReservationsScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onRateService = {
+                    navController.navigate(ROUTE_USER_REVIEW)
+                }
+            )
+        }
+    }
 }
