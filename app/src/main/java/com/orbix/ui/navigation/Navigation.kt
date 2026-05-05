@@ -7,3 +7,12 @@ object Login
 
 @Serializable
 object Home
+
+
+@Serializable
+object CarReview
+
+@Serializable
+object UserReview {
+
+}

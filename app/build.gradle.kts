@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,6 +7,7 @@ plugins {
 
 android {
     namespace = "com.orbix"
+    // SE CORRIGIÓ ESTA LÍNEA:
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -41,8 +43,12 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.glance.appwidget)
+    implementation("androidx.glance:glance-material3:1.1.1")
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
