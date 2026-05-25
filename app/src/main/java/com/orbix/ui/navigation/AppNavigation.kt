@@ -48,6 +48,7 @@ fun AppNavigation() {
 
         composable<CarReview> {
             CarReviewScreen(
+                onBack = { navController.popBackStack() },
                 onReviewSubmitted = {
                     navController.popBackStack()
                 }
@@ -56,6 +57,7 @@ fun AppNavigation() {
 
         composable<UserReview> {
             UserReviewScreen(
+                onBack = { navController.popBackStack() },
                 onReviewSubmitted = {
                     navController.popBackStack()
                 }
