@@ -1,7 +1,7 @@
 <div align="center">
 	<img src="/app/src/main/res/drawable/orbix512.png" alt="Orbix" width="100" />
 	<h1>Orbix</h1>
-	<img src="https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white" alt="Android"> <img src="https://img.shields.io/badge/Android%20Studio-1976D2?logo=androidstudio&logoColor=fff" alt="Android Studio"> <img src="https://img.shields.io/badge/Kotlin-%237F52FF.svg?logo=kotlin&logoColor=white" alt="Kotlin">
+	<img src="https://img.shields.io/badge/Android-2EC781?logo=android&logoColor=white" alt="Android"> <img alt="Jetpack Compose" src="https://img.shields.io/badge/Jetpack%20Compose-3A83F9?logo=jetpackcompose&logoColor=white"> <img src="https://img.shields.io/badge/Kotlin-%237F52FF.svg?logo=kotlin&logoColor=white" alt="Kotlin">
 </div>
 
 ## Descripción del proyecto
@@ -12,6 +12,7 @@ Nuestra plataforma conecta a propietarios de vehículos con usuarios que buscan 
 - **IDE:** Android Studio
 - **UI Framework:** Jetpack Compose
 - **Lenguaje:** Kotlin
+- **API**: 24 (Android "Nougat" 7.0 y superiores)
 
 ## Instrucciones para ejecutar la app
 
