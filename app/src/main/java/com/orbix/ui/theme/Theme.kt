@@ -1,4 +1,4 @@
-    package com.orbix.ui.theme
+package com.orbix.ui.theme
 
 import android.app.Activity
 import android.os.Build
@@ -9,29 +9,62 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = OrangePrimary,
-    onPrimary = Color.White,
+    onPrimary = WhiteColor,
     primaryContainer = OrangeContainerDark,
     onPrimaryContainer = OrangePrimary,
     secondary = BluePrimary,
-    onSecondary = Color.White,
+    onSecondary = WhiteColor,
     secondaryContainer = BlueContainerDark,
     onSecondaryContainer = BluePrimary,
+    tertiary = GoldTertiary,
+    onTertiary = WhiteColor,
+    tertiaryContainer = GoldContainerDark,
+    onTertiaryContainer = GoldTertiary,
+    background = DarkBackground,
+    onBackground = DarkOnBackground,
+    surface = DarkSurface,
+    onSurface = DarkOnSurface,
+    surfaceVariant = DarkSurfaceVariant,
+    onSurfaceVariant = DarkOnSurfaceVariant,
+    surfaceContainerHigh = DarkSurfaceContainerHigh,
+    error = DarkError,
+    onError = DarkOnError,
+    errorContainer = DarkErrorContainer,
+    onErrorContainer = DarkOnErrorContainer,
+    outline = DarkOutline,
+    outlineVariant = DarkOutlineVariant,
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = OrangePrimary,
-    onPrimary = Color.White,
-    primaryContainer = OrangeSecondary,
+    onPrimary = WhiteColor,
+    primaryContainer = OrangeContainerLight,
     onPrimaryContainer = OrangePrimary,
     secondary = BluePrimary,
-    onSecondary = Color.White,
-    secondaryContainer = BlueSecondary,
+    onSecondary = WhiteColor,
+    secondaryContainer = BlueContainerLight,
     onSecondaryContainer = BluePrimary,
+    tertiary = GoldTertiary,
+    onTertiary = WhiteColor,
+    tertiaryContainer = GoldContainerLight,
+    onTertiaryContainer = GoldTertiary,
+    background = LightBackground,
+    onBackground = LightOnBackground,
+    surface = LightSurface,
+    onSurface = LightOnSurface,
+    surfaceVariant = LightSurfaceVariant,
+    onSurfaceVariant = LightOnSurfaceVariant,
+    surfaceContainerHigh = LightSurfaceContainerHigh,
+    error = LightError,
+    onError = WhiteColor,
+    errorContainer = LightErrorContainer,
+    onErrorContainer = LightOnErrorContainer,
+    outline = LightOutline,
+    outlineVariant = LightOutlineVariant,
 )
 
 @Composable
