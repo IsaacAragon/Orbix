@@ -12,9 +12,11 @@ import androidx.navigation.toRoute
 import com.orbix.ui.screen.CarDetailScreen
 import com.orbix.ui.screen.CarReviewScreen
 import com.orbix.ui.screen.FavoritesScreen
+import com.orbix.ui.screen.IDVerificationScreen
 import com.orbix.ui.screen.LoginScreen
 import com.orbix.ui.screen.MainScreen
 import com.orbix.ui.screen.NewVehicleScreen
+import com.orbix.ui.screen.SearchScreen
 import com.orbix.ui.screen.SignUpScreen
 import com.orbix.ui.screen.TermsAndConditionsScreen
 import com.orbix.ui.screen.UserReviewScreen
@@ -24,9 +26,10 @@ fun AppNavigation() {
     val navController = rememberNavController()
 
     NavHost(
-        navController = navController, 
+        navController = navController,
         startDestination = Login
     ) {
+
         composable<Login> {
             LoginScreen(
                 onLogin = {
@@ -46,9 +49,11 @@ fun AppNavigation() {
                         launchSingleTop = true
                     }
                 },
+
                 onNavigateToCarReview = {
                     navController.navigate(CarReview)
                 },
+
                 onNavigateToUserReview = {
                     navController.navigate(UserReview)
                 },
@@ -66,6 +71,12 @@ fun AppNavigation() {
                 },
                 onNavigateToSignUp = {
                     navController.navigate(SignUp)
+                },
+                onNavigateToIDVerification = {
+                    navController.navigate(IDVerification)
+                },
+                onNavigateToSearch = {
+                    navController.navigate(Search)
                 }
             )
         }
@@ -135,6 +146,25 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() }
             )
         }
+
+        composable<IDVerification> {
+            IDVerificationScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable<Search> {
+            SearchScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onVehicleSelected = {
+                    // Más adelante:
+                    // navController.navigate(RentalDetail)
+                }
+            )
+        }
     }
 }
-

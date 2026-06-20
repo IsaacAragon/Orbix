@@ -29,3 +29,8 @@ object UserReview
 @Serializable
 object Favorites
 
+@Serializable
+object IDVerification
+
+@Serializable
+object Search

@@ -35,7 +35,9 @@ fun MainScreen(
     onNavigateToNewVehicle: () -> Unit,
     onNavigateToTermsAndConditions: () -> Unit,
     onNavigateToFavorites: () -> Unit,
-    onNavigateToSignUp: () -> Unit
+    onNavigateToSignUp: () -> Unit,
+    onNavigateToSearch: () -> Unit,
+    onNavigateToIDVerification: () -> Unit
 ) {
     val navItems = listOf(
         NavItem("Inicio", Icons.Default.Home, 0),
@@ -90,7 +92,8 @@ fun MainScreen(
             when (selectedItem) {
                 0 -> HomeScreen(
                     onNavigateToCarDetail = onNavigateToCarDetail,
-                    onNavigateToNewVehicle = onNavigateToNewVehicle
+                    onNavigateToNewVehicle = onNavigateToNewVehicle,
+                    onNavigateToSearch = onNavigateToSearch
                 )
                 1 -> ReservationsScreen(
                     onBack = { selectedItem = 0 },
@@ -103,7 +106,8 @@ fun MainScreen(
                     onNavigateToCarReview = onNavigateToCarReview,
                     onNavigateToUserReview = onNavigateToUserReview,
                     onNavigateToFavorites = onNavigateToFavorites,
-                    onNavigateToSignUp = onNavigateToSignUp
+                    onNavigateToSignUp = onNavigateToSignUp,
+                    onNavigateToIDVerification = onNavigateToIDVerification
                 )
             }
         }
