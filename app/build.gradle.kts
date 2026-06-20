@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.invoke
 
 plugins {
     alias(libs.plugins.android.application)
@@ -69,4 +70,5 @@ dependencies {
 
     // Iconos
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.coil.compose)
 }

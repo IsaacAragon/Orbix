@@ -29,7 +29,9 @@ import com.orbix.ui.navigation.NavItem
 fun MainScreen(
     onLogout: () -> Unit,
     onNavigateToCarReview: () -> Unit,
-    onNavigateToUserReview: () -> Unit
+    onNavigateToUserReview: () -> Unit,
+    onNavigateToSearch: () -> Unit,
+    onNavigateToIDVerification: () -> Unit
 ) {
     val navItems = listOf(
         NavItem("Inicio", Icons.Default.Home, 0),
@@ -83,7 +85,8 @@ fun MainScreen(
         ) {
             when (selectedItem) {
                 0 -> HomeScreen(
-                    onNavigateToCarReview = onNavigateToCarReview
+                    onNavigateToCarReview = onNavigateToCarReview,
+                    onNavigateToSearch = onNavigateToSearch
                 )
                 1 -> ReservationsScreen(
                     onBack = { selectedItem = 0 },
@@ -91,7 +94,8 @@ fun MainScreen(
                 )
                 2 -> FavoritesScreen()
                 3 -> ProfileScreen(
-                    onLogout = onLogout
+                    onLogout = onLogout,
+                    onNavigateToIDVerification = onNavigateToIDVerification
                 )
             }
         }
