@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,12 +30,17 @@ import com.orbix.ui.navigation.NavItem
 fun MainScreen(
     onLogout: () -> Unit,
     onNavigateToCarReview: () -> Unit,
-    onNavigateToUserReview: () -> Unit
+    onNavigateToUserReview: () -> Unit,
+    onNavigateToCarDetail: (String) -> Unit,
+    onNavigateToNewVehicle: () -> Unit,
+    onNavigateToTermsAndConditions: () -> Unit,
+    onNavigateToFavorites: () -> Unit,
+    onNavigateToSignUp: () -> Unit
 ) {
     val navItems = listOf(
         NavItem("Inicio", Icons.Default.Home, 0),
         NavItem("Reservas", Icons.Default.DateRange, 1),
-        NavItem("Favoritos", Icons.Default.Favorite, 2),
+        NavItem("Notificaciones", Icons.Default.Notifications, 2),
         NavItem("Perfil", Icons.Default.Person, 3)
     )
 
@@ -83,17 +89,24 @@ fun MainScreen(
         ) {
             when (selectedItem) {
                 0 -> HomeScreen(
-                    onNavigateToCarReview = onNavigateToCarReview
+                    onNavigateToCarDetail = onNavigateToCarDetail,
+                    onNavigateToNewVehicle = onNavigateToNewVehicle
                 )
                 1 -> ReservationsScreen(
                     onBack = { selectedItem = 0 },
                     onRateService = onNavigateToUserReview
                 )
-                2 -> FavoritesScreen()
+                2 -> NotificationsScreen()
                 3 -> ProfileScreen(
-                    onLogout = onLogout
+                    onLogout = onLogout,
+                    onNavigateToTermsAndConditions = onNavigateToTermsAndConditions,
+                    onNavigateToCarReview = onNavigateToCarReview,
+                    onNavigateToUserReview = onNavigateToUserReview,
+                    onNavigateToFavorites = onNavigateToFavorites,
+                    onNavigateToSignUp = onNavigateToSignUp
                 )
             }
         }
     }
 }
+
