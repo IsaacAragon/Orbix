@@ -16,3 +16,9 @@ object CarReview
 object UserReview {
 
 }
+
+@Serializable
+object IDVerification
+
+@Serializable
+object Search

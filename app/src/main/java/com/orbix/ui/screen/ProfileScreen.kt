@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -16,7 +17,8 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToIDVerification: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -91,6 +93,22 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                     
                     // Aquí irían más opciones de configuración en el futuro
+                    Button(
+                        onClick = onNavigateToIDVerification,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Icon(Icons.Default.Badge, contentDescription = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Text(
+                            "Verificar Identidad",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     
                     Button(
                         onClick = onLogout,

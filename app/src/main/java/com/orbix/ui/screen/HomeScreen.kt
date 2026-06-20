@@ -23,7 +23,8 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun HomeScreen(
-    onNavigateToCarReview: () -> Unit
+    onNavigateToCarReview: () -> Unit,
+    onNavigateToSearch: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -33,7 +34,9 @@ fun HomeScreen(
     ) {
         item { HomeHeader() }
 
-        item { HomeSearchBar() }
+        item { HomeSearchBar(
+            onNavigateToSearch = onNavigateToSearch
+        ) }
 
         item { HomeCategories() }
 
@@ -106,13 +109,16 @@ fun HomeHeader() {
 }
 
 @Composable
-fun HomeSearchBar() {
+fun HomeSearchBar(onNavigateToSearch: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+            .clickable{
+                onNavigateToSearch()
+            }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
