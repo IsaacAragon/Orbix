@@ -2,25 +2,29 @@ package com.orbix.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Shared reference white (use in place of Color.White)
+// En lugar de Color.White usar:
 val WhiteColor = Color(0xFFFFFFFF)
 
-// ── Orange palette (Primary) ──
+// Colores de marcas
+val WhatsappGreen = Color(0xFF25D366)
+
+
+// Paleta Naranja - Primaria
 val OrangePrimary = Color(0xFFDD7A37)
 val OrangeContainerLight = Color(0xFFFEF0DD)
 val OrangeContainerDark = Color(0xFF6D3909)
 
-// ── Blue palette (Secondary) ──
+// Paleta Azul - Secundaria
 val BluePrimary = Color(0xFF446DD2)
 val BlueContainerLight = Color(0xFFD5E7FF)
 val BlueContainerDark = Color(0xFF1B2E5B)
 
-// ── Gold palette (Tertiary — used for ratings) ──
+// Paleta Dorada - Terciaria (para calificaciones)
 val GoldTertiary = Color(0xFFE6A817)
 val GoldContainerLight = Color(0xFFFFF1D6)
 val GoldContainerDark = Color(0xFF4A3200)
 
-// ── Light scheme neutrals ──
+// Neutrales para tema claro
 val LightBackground = Color(0xFFFCF8F3)
 val LightOnBackground = Color(0xFF1C1B1F)
 val LightSurface = Color(0xFFFFFCF8)
@@ -31,7 +35,7 @@ val LightSurfaceContainerHigh = Color(0xFFF0EDEA)
 val LightOutline = Color(0xFF7B7468)
 val LightOutlineVariant = Color(0xFFCDC4B8)
 
-// ── Dark scheme neutrals ──
+// Neutrales para tema oscuro
 val DarkBackground = Color(0xFF1C1B1F)
 val DarkOnBackground = Color(0xFFE6E1E5)
 val DarkSurface = Color(0xFF1C1B1F)
@@ -42,7 +46,7 @@ val DarkSurfaceContainerHigh = Color(0xFF2B2826)
 val DarkOutline = Color(0xFF968F83)
 val DarkOutlineVariant = Color(0xFF4C4639)
 
-// ── Error palette ──
+// Paleta de Errores
 val LightError = Color(0xFFB3261E)
 val LightErrorContainer = Color(0xFFF9DEDC)
 val LightOnErrorContainer = Color(0xFF410E0B)
