@@ -34,3 +34,9 @@ object IDVerification
 
 @Serializable
 object Search
+
+@Serializable
+object RentalDetail
+
+@Serializable
+object HostDetail

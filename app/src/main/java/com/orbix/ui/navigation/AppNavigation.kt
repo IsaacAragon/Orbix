@@ -20,6 +20,8 @@ import com.orbix.ui.screen.SearchScreen
 import com.orbix.ui.screen.SignUpScreen
 import com.orbix.ui.screen.TermsAndConditionsScreen
 import com.orbix.ui.screen.UserReviewScreen
+import com.orbix.ui.screen.RentalDetailScreen
+import com.orbix.ui.screen.HostDetailScreen
 
 @Composable
 fun AppNavigation() {
@@ -161,9 +163,26 @@ fun AppNavigation() {
                     navController.popBackStack()
                 },
                 onVehicleSelected = {
-                    // Más adelante:
-                    // navController.navigate(RentalDetail)
+                    navController.navigate(RentalDetail)
                 }
+            )
+        }
+
+        composable<RentalDetail> {
+            RentalDetailScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToCarDetail = {
+                    navController.navigate(CarDetail("1"))
+                },
+                onNavigateToHostDetail = {
+                    navController.navigate(HostDetail)
+                }
+            )
+        }
+
+        composable<HostDetail> {
+            HostDetailScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }
