@@ -56,7 +56,8 @@ import com.orbix.ui.theme.WhatsappGreen
 @Composable
 fun CarDetailScreen(
     carId: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToRules: () -> Unit
 ) {
 
     val carName = if (carId == "1") "Toyota Corolla" else "Toyota Yaris"
@@ -190,6 +191,30 @@ fun CarDetailScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 24.sp
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = onNavigateToRules,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = null
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = "Ver reglas del vehículo",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 

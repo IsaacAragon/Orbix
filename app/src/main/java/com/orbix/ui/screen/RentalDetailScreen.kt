@@ -20,7 +20,7 @@ import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
+//DEMO, YA IMPLEMENTADA LA API SE VA CAMBIAR
 fun RentalDetailScreen(
     onBack: () -> Unit,
     onNavigateToCarDetail: () -> Unit,

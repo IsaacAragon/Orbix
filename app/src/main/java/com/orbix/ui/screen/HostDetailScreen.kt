@@ -18,8 +18,10 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+//DEMO, YA IMPLEMENTADA LA API SE VA CAMBIAR
 fun HostDetailScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToDashboard: () -> Unit
 ) {
 
     val hostName = "Luis Aragón"
@@ -188,6 +190,13 @@ fun HostDetailScreen(
                     )
                 }
             }
+            Button(
+                onClick = onNavigateToDashboard,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Ver estadísticas")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

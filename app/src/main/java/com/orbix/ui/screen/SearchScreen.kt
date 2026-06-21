@@ -31,6 +31,7 @@ import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+//DEMO, YA IMPLEMENTADA LA API SE VA CAMBIAR
 fun SearchScreen(
     onBack : () -> Unit,
     onVehicleSelected: () -> Unit
