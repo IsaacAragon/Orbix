@@ -25,7 +25,7 @@ import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
+//DEMO, YA IMPLEMENTADA LA API SE VA CAMBIAR
 fun IDVerificationScreen(
     onBack: () -> Unit
 ){

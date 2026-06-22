@@ -34,3 +34,21 @@ object IDVerification
 
 @Serializable
 object Search
+
+@Serializable
+object RentalDetail
+
+@Serializable
+object HostDetail
+
+@Serializable
+object HostDashboard
+
+@Serializable
+object CarManagement
+
+@Serializable
+object RentalManagement
+
+@Serializable
+object HostRules

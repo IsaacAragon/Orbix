@@ -20,6 +20,12 @@ import com.orbix.ui.screen.SearchScreen
 import com.orbix.ui.screen.SignUpScreen
 import com.orbix.ui.screen.TermsAndConditionsScreen
 import com.orbix.ui.screen.UserReviewScreen
+import com.orbix.ui.screen.RentalDetailScreen
+import com.orbix.ui.screen.HostDetailScreen
+import com.orbix.ui.screen.HostDashboardScreen
+import com.orbix.ui.screen.CarManagementScreen
+import com.orbix.ui.screen.HostRulesScreen
+import com.orbix.ui.screen.RentalManagementScreen
 
 @Composable
 fun AppNavigation() {
@@ -85,7 +91,10 @@ fun AppNavigation() {
             val carDetail: CarDetail = backStackEntry.toRoute()
             CarDetailScreen(
                 carId = carDetail.carId,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToRules = {
+                    navController.navigate(HostRules)
+                }
             )
         }
 
@@ -161,9 +170,59 @@ fun AppNavigation() {
                     navController.popBackStack()
                 },
                 onVehicleSelected = {
-                    // Más adelante:
-                    // navController.navigate(RentalDetail)
+                    navController.navigate(RentalDetail)
                 }
+            )
+        }
+
+        composable<RentalDetail> {
+            RentalDetailScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToCarDetail = {
+                    navController.navigate(CarDetail("1"))
+                },
+                onNavigateToHostDetail = {
+                    navController.navigate(HostDetail)
+                }
+            )
+        }
+
+        composable<HostDetail> {
+            HostDetailScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToDashboard = {
+                    navController.navigate(HostDashboard)
+                }
+            )
+        }
+
+        composable<HostDashboard> {
+            HostDashboardScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToCarManagement = {
+                    navController.navigate(CarManagement)
+                },
+                onNavigateToRentalManagement = {
+                    navController.navigate(RentalManagement)
+                }
+            )
+        }
+
+        composable<CarManagement> {
+            CarManagementScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<RentalManagement> {
+            RentalManagementScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<HostRules> {
+            HostRulesScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }
