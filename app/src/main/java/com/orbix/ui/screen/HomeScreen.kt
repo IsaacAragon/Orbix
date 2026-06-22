@@ -53,12 +53,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+//Incorporación de datos de la Api
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.orbix.ui.model.Vehicle
+import com.orbix.ui.viewmodel.VehicleViewModel
+
 @Composable
 fun HomeScreen(
     onNavigateToCarDetail: (String) -> Unit,
     onNavigateToNewVehicle: () -> Unit,
     onNavigateToSearch: () -> Unit
 ) {
+    val vm: VehicleViewModel = viewModel()
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -97,9 +104,19 @@ fun HomeScreen(
                 )
             }
 
-            items(5) { index ->
+            /*items(5) { index ->
                 CarCard(
                     carId = (index + 1).toString(),
+                    onNavigateToCarDetail = onNavigateToCarDetail
+                )
+            }*/
+
+            items(vm.vehicles.size) { index ->
+
+                val vehicle = vm.vehicles[index]
+
+                VehicleCard(
+                    vehicle = vehicle,
                     onNavigateToCarDetail = onNavigateToCarDetail
                 )
             }
@@ -405,6 +422,48 @@ fun CarCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+        }
+    }
+}
+
+
+//Muestra carros reales
+@Composable
+fun VehicleCard(
+    vehicle: Vehicle,
+    onNavigateToCarDetail: (String) -> Unit
+) {
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+
+            Text(
+                text = vehicle.brand,
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                text = vehicle.model
+            )
+
+            Text(
+                text = "$${vehicle.pricePerDay}"
+            )
+
+            Button(
+                onClick = {
+                    onNavigateToCarDetail(
+                        vehicle.id.toString()
+                    )
+                }
+            ) {
+                Text("Ver detalle")
             }
         }
     }
