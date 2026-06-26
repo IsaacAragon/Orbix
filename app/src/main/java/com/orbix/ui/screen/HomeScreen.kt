@@ -279,6 +279,7 @@ fun HomeCategories() {
     }
 }
 
+//
 @Composable
 fun CarCard(
     carId: String,
@@ -432,7 +433,7 @@ fun CarCard(
 
 
 //Muestra carros reales
-@Composable
+/*@Composable
 fun VehicleCard(
     vehicle: Vehicle,
     onNavigateToCarDetail: (String) -> Unit
@@ -560,6 +561,223 @@ fun VehicleCard(
                         text = "Rentar",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}*/
+
+//Mejora de muestra de datos reales
+@Composable
+fun VehicleCard(
+    vehicle: Vehicle,
+    onNavigateToCarDetail: (String) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+
+            // Encabezado
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+
+                Column {
+                    Text(
+                        text = "${vehicle.brand} ${vehicle.model}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "${vehicle.year} • ${vehicle.transmission}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (vehicle.available) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+                    } else {
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)
+                    }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(
+                            horizontal = 8.dp,
+                            vertical = 4.dp
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (vehicle.available)
+                                Icons.Default.Star
+                            else
+                                Icons.Default.DirectionsCar,
+                            contentDescription = null,
+                            tint = if (vehicle.available)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        Text(
+                            text = if (vehicle.available)
+                                "Disponible"
+                            else
+                                "Rentado",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Imagen
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+
+                if (vehicle.imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = vehicle.imageUrl,
+                        contentDescription = "${vehicle.brand} ${vehicle.model}",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.DirectionsCar,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Especificaciones
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Año",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Text(
+                            text = vehicle.year,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Trans.",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Text(
+                            text = vehicle.transmission,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Pasajeros",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Text(
+                            text = vehicle.passengers,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Precio y botón
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Row(verticalAlignment = Alignment.Bottom) {
+
+                    Text(
+                        text = "$${
+                            if (vehicle.pricePerDay % 1.0 == 0.0)
+                                vehicle.pricePerDay.toInt()
+                            else
+                                vehicle.pricePerDay
+                        }",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Text(
+                        text = "/ día",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        onNavigateToCarDetail(
+                            vehicle.id.toString()
+                        )
+                    },
+                    enabled = vehicle.available,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = if (vehicle.available)
+                            "Rentar"
+                        else
+                            "No disponible"
                     )
                 }
             }
