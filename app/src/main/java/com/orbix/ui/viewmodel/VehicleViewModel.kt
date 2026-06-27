@@ -22,17 +22,10 @@ class VehicleViewModel : ViewModel() {
         loadVehicles()
     }
 
-    private fun loadVehicles(){
-
+    fun loadVehicles() {
         viewModelScope.launch {
-
-            when(val result =
-                repository.getVehicles()){
-
-                is ApiResult.Success -> {
-                    vehicles = result.data
-                }
-
+            when (val result = repository.getVehicles()) {
+                is ApiResult.Success -> vehicles = result.data
                 is ApiResult.Error -> {}
             }
         }

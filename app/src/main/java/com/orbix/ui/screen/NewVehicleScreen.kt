@@ -1,5 +1,6 @@
 package com.orbix.ui.screen
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,16 +39,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.orbix.ui.viewmodel.NewVehicleViewModel
+import com.orbix.ui.viewmodel.VehicleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewVehicleScreen(
     onBack: () -> Unit,
-    onVehicleAdded: () -> Unit
+    onVehicleAdded: () -> Unit,
+    viewModel: NewVehicleViewModel = viewModel()
 ) {
+    val activity = LocalContext.current as ComponentActivity
+    val listViewModel: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
+
     var brand by remember { mutableStateOf("") }
     var model by remember { mutableStateOf("") }
     var year by remember { mutableStateOf("") }
@@ -54,6 +65,9 @@ fun NewVehicleScreen(
     var transmission by remember { mutableStateOf("") }
 
     val scrollState = rememberScrollState()
+
+    val isFormValid = brand.isNotBlank() && model.isNotBlank() && year.isNotBlank() &&
+            transmission.isNotBlank() && seats.isNotBlank() && price.isNotBlank()
 
     Scaffold(
         topBar = {
@@ -106,7 +120,10 @@ fun NewVehicleScreen(
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Star, contentDescription = null) },
                 value = brand,
-                onValueChange = { brand = it },
+                onValueChange = {
+                    brand = it
+                    viewModel.clearError()
+                },
                 label = { Text("Marca") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -116,7 +133,10 @@ fun NewVehicleScreen(
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.DirectionsCar, contentDescription = null) },
                 value = model,
-                onValueChange = { model = it },
+                onValueChange = {
+                    model = it
+                    viewModel.clearError()
+                },
                 label = { Text("Modelo") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -126,7 +146,10 @@ fun NewVehicleScreen(
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Event, contentDescription = null) },
                 value = year,
-                onValueChange = { year = it },
+                onValueChange = {
+                    year = it
+                    viewModel.clearError()
+                },
                 label = { Text("Año") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
@@ -137,7 +160,10 @@ fun NewVehicleScreen(
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
                 value = transmission,
-                onValueChange = { transmission = it },
+                onValueChange = {
+                    transmission = it
+                    viewModel.clearError()
+                },
                 label = { Text("Transmisión") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -147,7 +173,10 @@ fun NewVehicleScreen(
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Groups, contentDescription = null) },
                 value = seats,
-                onValueChange = { seats = it },
+                onValueChange = {
+                    seats = it
+                    viewModel.clearError()
+                },
                 label = { Text("Cantidad de asientos") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
@@ -158,7 +187,10 @@ fun NewVehicleScreen(
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Payments, contentDescription = null) },
                 value = price,
-                onValueChange = { price = it },
+                onValueChange = {
+                    price = it
+                    viewModel.clearError()
+                },
                 label = { Text("Precio por día (USD)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
@@ -166,11 +198,31 @@ fun NewVehicleScreen(
                 singleLine = true
             )
 
+            viewModel.errorMessage?.let { error ->
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = onVehicleAdded,
-                enabled = brand.isNotBlank() && model.isNotBlank() && price.isNotBlank(),
+                onClick = {
+                    viewModel.createVehicle(
+                        brand = brand,
+                        model = model,
+                        year = year,
+                        transmission = transmission,
+                        passengers = seats,
+                        pricePerDay = price
+                    ) {
+                        listViewModel.loadVehicles()
+                        onVehicleAdded()
+                    }
+                },
+                enabled = isFormValid && !viewModel.isLoading,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -178,12 +230,19 @@ fun NewVehicleScreen(
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
-                Text(
-                    text = "Guardar Vehículo",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
+                if (viewModel.isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Guardar Vehículo",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
             }
         }
     }

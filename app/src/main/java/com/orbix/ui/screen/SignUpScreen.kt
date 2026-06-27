@@ -1,7 +1,7 @@
 package com.orbix.ui.screen
 
 import android.app.DatePickerDialog
-
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,14 +48,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.orbix.ui.viewmodel.SignUpViewModel
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
     onBack: () -> Unit,
-    onNavigateToTerms: () -> Unit
+    onRegisterSuccess: () -> Unit,
+    viewModel: SignUpViewModel = viewModel()
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -80,7 +84,6 @@ fun SignUpScreen(
 
     val isFormValid = fullName.isNotBlank() &&
             email.isNotBlank() &&
-            birthDate.isNotBlank() &&
             password.isNotBlank() &&
             confirmPassword.isNotBlank() &&
             password == confirmPassword
@@ -126,7 +129,7 @@ fun SignUpScreen(
             )
 
             Text(
-                text = "Ingresa tus datos personales para crear una cuenta en la plataforma.",
+                text = "Ingresa tus datos para crear una cuenta en la plataforma.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -136,7 +139,10 @@ fun SignUpScreen(
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 value = fullName,
-                onValueChange = { fullName = it },
+                onValueChange = {
+                    fullName = it
+                    viewModel.clearError()
+                },
                 label = { Text("Nombre completo") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -146,7 +152,10 @@ fun SignUpScreen(
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    viewModel.clearError()
+                },
                 label = { Text("Correo electrónico") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth(),
@@ -154,14 +163,12 @@ fun SignUpScreen(
                 singleLine = true
             )
 
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     leadingIcon = { Icon(Icons.Default.Event, contentDescription = null) },
                     value = birthDate,
                     onValueChange = {},
-                    label = { Text("Fecha de nacimiento") },
+                    label = { Text("Fecha de nacimiento (opcional)") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     readOnly = true
@@ -176,7 +183,10 @@ fun SignUpScreen(
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    viewModel.clearError()
+                },
                 label = { Text("Contraseña") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -195,7 +205,10 @@ fun SignUpScreen(
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                 value = confirmPassword,
-                onValueChange = { confirmPassword = it },
+                onValueChange = {
+                    confirmPassword = it
+                    viewModel.clearError()
+                },
                 label = { Text("Confirmar contraseña") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -220,11 +233,21 @@ fun SignUpScreen(
                 )
             }
 
+            viewModel.errorMessage?.let { error ->
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = onNavigateToTerms,
-                enabled = isFormValid,
+                onClick = {
+                    viewModel.register(fullName, email, password, onRegisterSuccess)
+                },
+                enabled = isFormValid && !viewModel.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -234,11 +257,18 @@ fun SignUpScreen(
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
-                Text(
-                    text = "Siguiente",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                if (viewModel.isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Crear cuenta",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

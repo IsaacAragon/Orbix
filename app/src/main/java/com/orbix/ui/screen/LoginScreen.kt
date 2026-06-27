@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +44,7 @@ import com.orbix.ui.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     onLogin: () -> Unit,
+    onNavigateToSignUp: () -> Unit = {},
     viewModel: LoginViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
@@ -158,6 +160,11 @@ fun LoginScreen(
                         }
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            TextButton(onClick = onNavigateToSignUp) {
+                Text("¿No tienes cuenta? Regístrate")
             }
         }
     }
