@@ -59,28 +59,33 @@ import coil.compose.AsyncImage
 //Incorporación de datos de la Api
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.orbix.ui.model.Vehicle
+import com.orbix.ui.util.Permissions
 import com.orbix.ui.viewmodel.VehicleViewModel
 
 @Composable
 fun HomeScreen(
+    userPermissions: Set<String>,
     onNavigateToCarDetail: (String) -> Unit,
     onNavigateToNewVehicle: () -> Unit,
     onNavigateToSearch: () -> Unit
 ) {
     val vm: VehicleViewModel = viewModel()
+    val canCreateVehicle = Permissions.canCreateVehicle(userPermissions)
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToNewVehicle,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Registrar Vehículo"
-                )
+            if (canCreateVehicle) {
+                FloatingActionButton(
+                    onClick = onNavigateToNewVehicle,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Registrar Vehículo"
+                    )
+                }
             }
         },
         containerColor = MaterialTheme.colorScheme.background

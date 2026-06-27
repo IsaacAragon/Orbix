@@ -1,24 +1,22 @@
 package com.orbix.ui.repository
 
 import com.orbix.ui.model.Vehicle
+import com.orbix.ui.service.ApiClient
 import com.orbix.ui.service.ApiResult
-import com.orbix.ui.service.RetrofitClient
+import retrofit2.HttpException
 
 class VehicleRepository {
-    suspend fun getVehicles():
-            ApiResult<List<Vehicle>> {
-
+    suspend fun getVehicles(): ApiResult<List<Vehicle>> {
         return try {
-
-            ApiResult.Success(
-                RetrofitClient.api.getVehicles()
-            )
-
-        } catch (e: Exception){
-
-            ApiResult.Error(
-                e.message ?: "Error"
-            )
+            ApiResult.Success(ApiClient.vehicleApi.getVehicles())
+        } catch (e: HttpException) {
+            when (e.code()) {
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
+                403 -> ApiResult.Error("No tienes permiso para ver vehículos.")
+                else -> ApiResult.Error("Error del servidor")
+            }
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error de conexión")
         }
     }
 }

@@ -28,6 +28,8 @@ import com.orbix.ui.navigation.NavItem
 
 @Composable
 fun MainScreen(
+    userEmail: String,
+    userPermissions: Set<String>,
     onLogout: () -> Unit,
     onNavigateToCarReview: () -> Unit,
     onNavigateToUserReview: () -> Unit,
@@ -91,6 +93,7 @@ fun MainScreen(
         ) {
             when (selectedItem) {
                 0 -> HomeScreen(
+                    userPermissions = userPermissions,
                     onNavigateToCarDetail = onNavigateToCarDetail,
                     onNavigateToNewVehicle = onNavigateToNewVehicle,
                     onNavigateToSearch = onNavigateToSearch
@@ -101,6 +104,7 @@ fun MainScreen(
                 )
                 2 -> NotificationsScreen()
                 3 -> ProfileScreen(
+                    userEmail = userEmail,
                     onLogout = onLogout,
                     onNavigateToTermsAndConditions = onNavigateToTermsAndConditions,
                     onNavigateToCarReview = onNavigateToCarReview,
