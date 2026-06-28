@@ -1,10 +1,12 @@
 package com.orbix.ui.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.orbix.ui.local.TokenStorage
 import com.orbix.ui.model.AllReviewTagsResponse
 import com.orbix.ui.model.ReviewTagOption
 import com.orbix.ui.model.UserReviewResponse
@@ -17,14 +19,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ReviewViewModel : ViewModel() {
+class ReviewViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         const val TYPE_VEHICLE = "VEHICLE"
         const val TYPE_USER = "USER"
     }
 
-    private val repository = ReviewRepository()
+    private val repository = ReviewRepository(TokenStorage(application))
 
     var vehicleSummary by mutableStateOf<VehicleReviewSummary?>(null)
         private set

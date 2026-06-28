@@ -32,6 +32,10 @@ class TokenStorage(private val context: Context) {
         return token?.takeIf { it.isNotBlank() }
     }
 
+    suspend fun syncToApiClient() {
+        ApiClient.setToken(getToken())
+    }
+
     suspend fun getEmail(): String? {
         return context.dataStore.data.map { it[KEY_EMAIL] }.first()
     }
