@@ -71,16 +71,24 @@ fun SignUpScreen(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    val calendar = Calendar.getInstance()
+    val maxCalendar = Calendar.getInstance().apply {
+        add(Calendar.YEAR, -18)
+    }
+    val minCalendar = Calendar.getInstance().apply {
+        add(Calendar.YEAR, -150)
+    }
     val datePickerDialog = DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
             birthDate = String.format("%02d/%02d/%d", dayOfMonth, month + 1, year)
         },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH)
-    )
+        maxCalendar.get(Calendar.YEAR),
+        maxCalendar.get(Calendar.MONTH),
+        maxCalendar.get(Calendar.DAY_OF_MONTH)
+    ).apply {
+        datePicker.maxDate = maxCalendar.timeInMillis
+        datePicker.minDate = minCalendar.timeInMillis
+    }
 
     val isFormValid = fullName.isNotBlank() &&
             email.isNotBlank() &&
