@@ -18,12 +18,13 @@ class TokenStorage(private val context: Context) {
 
     suspend fun saveSession(response: AuthResponse) {
         context.dataStore.edit { prefs ->
-            prefs[KEY_TOKEN] = response.token.orEmpty()
+            // /auth/me no devuelve token; no sobrescribir el guardado en login/register
+            response.token?.takeIf { it.isNotBlank() }?.let { prefs[KEY_TOKEN] = it }
             prefs[KEY_EMAIL] = response.email
             prefs[KEY_ROLES] = response.roles.toSet()
             prefs[KEY_PERMISSIONS] = response.permissions.toSet()
         }
-        ApiClient.setToken(response.token)
+        response.token?.takeIf { it.isNotBlank() }?.let { ApiClient.setToken(it) }
     }
 
     suspend fun getToken(): String? {
