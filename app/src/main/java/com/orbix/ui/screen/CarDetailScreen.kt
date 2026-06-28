@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -57,6 +58,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 import coil.compose.AsyncImage
 
+import com.orbix.ui.model.VehicleCategory
+import com.orbix.ui.model.label
 import com.orbix.ui.theme.WhatsappGreen
 import com.orbix.ui.viewmodel.VehicleViewModel
 
@@ -69,7 +72,7 @@ fun CarDetailScreen(
 ) {
     val activity = LocalContext.current as ComponentActivity
     val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
-    val vehicle = vm.vehicles.find { it.id.toString() == carId }
+    val vehicle = vm.vehicles.find { it.id?.toString() == carId }
 
     val carName = vehicle?.let { "${it.brand} ${it.model}" } ?: "Vehículo no encontrado"
     val carPrice = vehicle?.pricePerDay?.let {
@@ -126,7 +129,7 @@ fun CarDetailScreen(
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (vehicle != null && vehicle.imageUrl.isNotBlank()) {
+                    if (vehicle != null && !vehicle.imageUrl.isNullOrBlank()) {
                         AsyncImage(
                             model = vehicle.imageUrl,
                             contentDescription = carName,
@@ -162,6 +165,13 @@ fun CarDetailScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        vehicle?.category?.let { category ->
+                            Spacer(modifier = Modifier.height(8.dp))
+                            AssistChip(
+                                onClick = {},
+                                label = { Text(category.label()) }
+                            )
+                        }
                     }
 
                     Surface(
@@ -210,7 +220,7 @@ fun CarDetailScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Este vehículo se encuentra en excelentes condiciones mecánicas y estéticas. Ideal para moverse por la ciudad o para viajes largos en carretera. Cuenta con aire acondicionado, amplio espacio en cajuela, bolsas de aire y conectividad Bluetooth.",
+                    text = vehicle?.description ?: "Sin descripción",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 24.sp

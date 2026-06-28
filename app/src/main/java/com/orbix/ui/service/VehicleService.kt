@@ -1,5 +1,6 @@
 package com.orbix.ui.service
 
+import com.orbix.ui.model.CreateVehicleRequest
 import com.orbix.ui.model.Vehicle
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -10,16 +11,5 @@ interface VehicleService {
     suspend fun getVehicles(): List<Vehicle>
 
     @POST("vehicles")
-    suspend fun create(@Body vehicle: VehicleRequest): Vehicle
+    suspend fun create(@Body vehicle: CreateVehicleRequest): Vehicle
 }
-
-data class VehicleRequest(
-    val brand: String,
-    val model: String,
-    val year: String,
-    val transmission: String,
-    val passengers: String,
-    val pricePerDay: Double,
-    val imageUrl: String = "",
-    val available: Boolean = true
-)

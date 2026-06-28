@@ -1,9 +1,10 @@
 package com.orbix.ui.repository
 
+import com.orbix.ui.model.CreateVehicleRequest
 import com.orbix.ui.model.Vehicle
+import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.service.ApiClient
 import com.orbix.ui.service.ApiResult
-import com.orbix.ui.service.VehicleRequest
 import retrofit2.HttpException
 
 class VehicleRepository {
@@ -27,18 +28,24 @@ class VehicleRepository {
         year: String,
         transmission: String,
         passengers: String,
-        pricePerDay: Double
+        pricePerDay: Double,
+        description: String,
+        category: VehicleCategory
     ): ApiResult<Vehicle> {
         return try {
             ApiResult.Success(
                 ApiClient.vehicleApi.create(
-                    VehicleRequest(
+                    CreateVehicleRequest(
                         brand = brand,
                         model = model,
                         year = year,
                         transmission = transmission,
                         passengers = passengers,
-                        pricePerDay = pricePerDay
+                        pricePerDay = pricePerDay,
+                        imageUrl = null,
+                        available = true,
+                        description = description,
+                        category = category
                     )
                 )
             )

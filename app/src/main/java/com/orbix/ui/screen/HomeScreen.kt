@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -51,8 +53,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -61,6 +64,9 @@ import coil.compose.AsyncImage
 //Incorporación de datos de la Api
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.orbix.ui.model.Vehicle
+import com.orbix.ui.model.VehicleCategory
+import com.orbix.ui.model.byCategory
+import com.orbix.ui.model.label
 import com.orbix.ui.util.Permissions
 import com.orbix.ui.viewmodel.VehicleViewModel
 
@@ -74,6 +80,8 @@ fun HomeScreen(
     val activity = LocalContext.current as ComponentActivity
     val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
     val canCreateVehicle = Permissions.canCreateVehicle(userPermissions)
+    var selectedCategory by remember { mutableStateOf<VehicleCategory?>(null) }
+    val filteredVehicles = vm.vehicles.byCategory(selectedCategory)
 
     Scaffold(
         floatingActionButton = {
@@ -104,7 +112,12 @@ fun HomeScreen(
 
             item { HomeSearchBar(onSearchClick = onNavigateToSearch) }
 
-            item { HomeCategories() }
+            item {
+                HomeCategories(
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { selectedCategory = it }
+                )
+            }
 
             item {
                 Text(
@@ -122,9 +135,8 @@ fun HomeScreen(
                 )
             }*/
 
-            items(vm.vehicles.size) { index ->
-
-                val vehicle = vm.vehicles[index]
+            items(filteredVehicles.size) { index ->
+                val vehicle = filteredVehicles[index]
 
                 VehicleCard(
                     vehicle = vehicle,
@@ -224,10 +236,10 @@ fun HomeSearchBar(onSearchClick: () -> Unit) {
 }
 
 @Composable
-fun HomeCategories() {
-    val categories = listOf("Coches", "SUVs", "Motos", "Eléctrico", "Pickup")
-    var selectedIndex by remember { mutableStateOf(0) }
-
+fun HomeCategories(
+    selectedCategory: VehicleCategory?,
+    onCategorySelected: (VehicleCategory?) -> Unit
+) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -239,7 +251,7 @@ fun HomeCategories() {
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-            TextButton(onClick = { }) {
+            TextButton(onClick = { onCategorySelected(null) }) {
                 Text(
                     text = "Ver todas",
                     style = MaterialTheme.typography.labelLarge,
@@ -250,40 +262,48 @@ fun HomeCategories() {
         }
 
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            itemsIndexed(categories) { index, category ->
-                val isSelected = index == selectedIndex
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier
-                        .width(100.dp)
-                        .clickable { selectedIndex = index },
-                    tonalElevation = if (isSelected) 4.dp else 0.dp
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(vertical = 18.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DirectionsCar,
-                            contentDescription = null,
-                            tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = category,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+            item {
+                val isSelected = selectedCategory == null
+                CategoryChip(
+                    label = "Todas",
+                    isSelected = isSelected,
+                    onClick = { onCategorySelected(null) }
+                )
+            }
+            items(VehicleCategory.entries.size) { index ->
+                val category = VehicleCategory.entries[index]
+                CategoryChip(
+                    label = category.label(),
+                    isSelected = selectedCategory == category,
+                    onClick = { onCategorySelected(category) }
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun CategoryChip(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+        modifier = Modifier.clickable { onClick() },
+        tonalElevation = if (isSelected) 4.dp else 0.dp
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        )
     }
 }
 
@@ -613,11 +633,19 @@ fun VehicleCard(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "${vehicle.year} • ${vehicle.transmission}",
+                        text = "${vehicle.year} • ${vehicle.transmission.orEmpty()}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 0.5.sp
                     )
+
+                    vehicle.category?.let { category ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(category.label()) }
+                        )
+                    }
                 }
 
                 Surface(
@@ -662,6 +690,16 @@ fun VehicleCard(
                 }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = vehicle.description ?: "Sin descripción",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Imagen
@@ -674,7 +712,7 @@ fun VehicleCard(
                 contentAlignment = Alignment.Center
             ) {
 
-                if (vehicle.imageUrl.isNotBlank()) {
+                if (!vehicle.imageUrl.isNullOrBlank()) {
                     AsyncImage(
                         model = vehicle.imageUrl,
                         contentDescription = "${vehicle.brand} ${vehicle.model}",
@@ -722,7 +760,7 @@ fun VehicleCard(
                             style = MaterialTheme.typography.labelSmall
                         )
                         Text(
-                            text = vehicle.transmission,
+                            text = vehicle.transmission.orEmpty(),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -733,7 +771,7 @@ fun VehicleCard(
                             style = MaterialTheme.typography.labelSmall
                         )
                         Text(
-                            text = vehicle.passengers,
+                            text = vehicle.passengers.orEmpty(),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -750,13 +788,13 @@ fun VehicleCard(
             ) {
 
                 Row(verticalAlignment = Alignment.Bottom) {
-
+                    val price = vehicle.pricePerDay ?: 0.0
                     Text(
                         text = "$${
-                            if (vehicle.pricePerDay % 1.0 == 0.0)
-                                vehicle.pricePerDay.toInt()
+                            if (price % 1.0 == 0.0)
+                                price.toInt()
                             else
-                                vehicle.pricePerDay
+                                price
                         }",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.ExtraBold,
@@ -774,11 +812,9 @@ fun VehicleCard(
 
                 Button(
                     onClick = {
-                        onNavigateToCarDetail(
-                            vehicle.id.toString()
-                        )
+                        vehicle.id?.let { onNavigateToCarDetail(it.toString()) }
                     },
-                    enabled = vehicle.isAvailable,
+                    enabled = vehicle.isAvailable && vehicle.id != null,
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
