@@ -57,4 +57,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     val email: String
         get() = (sessionState as? SessionState.Authenticated)?.session?.email ?: ""
+
+    val roles: Set<String>
+        get() = (sessionState as? SessionState.Authenticated)?.session?.roles ?: emptySet()
 }

@@ -86,9 +86,14 @@ fun AppNavigation() {
                     MainScreen(
                         userEmail = state.session.email,
                         userPermissions = state.session.permissions,
+                        userRoles = state.session.roles,
                         onLogout = { sessionViewModel.logout() },
-                        onNavigateToCarReview = { navController.navigate(CarReview) },
-                        onNavigateToUserReview = { navController.navigate(UserReview) },
+                        onNavigateToCarReview = { vehicleId ->
+                            navController.navigate(CarReview(vehicleId))
+                        },
+                        onNavigateToUserReview = { userId ->
+                            navController.navigate(UserReview(userId))
+                        },
                         onNavigateToCarDetail = { carId ->
                             navController.navigate(CarDetail(carId))
                         },
@@ -107,9 +112,13 @@ fun AppNavigation() {
                     val carDetail: CarDetail = backStackEntry.toRoute()
                     CarDetailScreen(
                         carId = carDetail.carId,
+                        userRoles = state.session.roles,
                         onBack = { navController.popBackStack() },
                         onNavigateToRules = {
                             navController.navigate(HostRules)
+                        },
+                        onNavigateToReview = { vehicleId ->
+                            navController.navigate(CarReview(vehicleId))
                         }
                     )
                 }
@@ -146,15 +155,19 @@ fun AppNavigation() {
                     )
                 }
 
-                composable<CarReview> {
+                composable<CarReview> { backStackEntry ->
+                    val route: CarReview = backStackEntry.toRoute()
                     CarReviewScreen(
+                        vehicleId = route.vehicleId,
                         onBack = { navController.popBackStack() },
                         onReviewSubmitted = { navController.popBackStack() }
                     )
                 }
 
-                composable<UserReview> {
+                composable<UserReview> { backStackEntry ->
+                    val route: UserReview = backStackEntry.toRoute()
                     UserReviewScreen(
+                        reviewedUserId = route.reviewedUserId,
                         onBack = { navController.popBackStack() },
                         onReviewSubmitted = { navController.popBackStack() }
                     )

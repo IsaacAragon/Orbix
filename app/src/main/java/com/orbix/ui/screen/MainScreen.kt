@@ -35,9 +35,10 @@ import com.orbix.ui.viewmodel.VehicleViewModel
 fun MainScreen(
     userEmail: String,
     userPermissions: Set<String>,
+    userRoles: Set<String>,
     onLogout: () -> Unit,
-    onNavigateToCarReview: () -> Unit,
-    onNavigateToUserReview: () -> Unit,
+    onNavigateToCarReview: (Long) -> Unit,
+    onNavigateToUserReview: (Long) -> Unit,
     onNavigateToCarDetail: (String) -> Unit,
     onNavigateToNewVehicle: () -> Unit,
     onNavigateToTermsAndConditions: () -> Unit,
@@ -114,15 +115,18 @@ fun MainScreen(
                 )
                 1 -> ReservationsScreen(
                     onBack = { selectedItem = 0 },
-                    onRateService = onNavigateToUserReview
+                    onRateService = { onNavigateToUserReview(2L) }
                 )
                 2 -> NotificationsScreen()
                 3 -> ProfileScreen(
                     userEmail = userEmail,
+                    userRoles = userRoles,
                     onLogout = onLogout,
                     onNavigateToTermsAndConditions = onNavigateToTermsAndConditions,
-                    onNavigateToCarReview = onNavigateToCarReview,
-                    onNavigateToUserReview = onNavigateToUserReview,
+                    onNavigateToCarReview = {
+                        vehicleViewModel.vehicles.firstOrNull()?.id?.let(onNavigateToCarReview)
+                    },
+                    onNavigateToUserReview = { onNavigateToUserReview(2L) },
                     onNavigateToFavorites = onNavigateToFavorites,
                     onNavigateToSignUp = onNavigateToSignUp,
                     onNavigateToIDVerification = onNavigateToIDVerification

@@ -45,11 +45,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.orbix.ui.util.Roles
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     userEmail: String,
+    userRoles: Set<String>,
     onLogout: () -> Unit,
     onNavigateToTermsAndConditions: () -> Unit,
     onNavigateToCarReview: () -> Unit,
@@ -164,71 +166,73 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    TextButton(
-                        onClick = onNavigateToCarReview,
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Row(
+                    if (Roles.canReviewVehicle(userRoles)) {
+                        TextButton(
+                            onClick = onNavigateToCarReview,
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            contentPadding = PaddingValues(0.dp)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Star,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = "Reseñar Vehículo",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                                 Icon(
-                                    imageVector = Icons.Default.Star,
+                                    imageVector = Icons.Default.ArrowForward,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = "Reseñar Vehículo (Demo)",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Icon(
-                                imageVector = Icons.Default.ArrowForward,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    TextButton(
-                        onClick = onNavigateToUserReview,
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Row(
+                    if (Roles.canReviewUser(userRoles)) {
+                        TextButton(
+                            onClick = onNavigateToUserReview,
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            contentPadding = PaddingValues(0.dp)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = "Reseñar Cliente",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                                 Icon(
-                                    imageVector = Icons.Default.Person,
+                                    imageVector = Icons.Default.ArrowForward,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = "Reseñar Propietario (Demo)",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Icon(
-                                imageVector = Icons.Default.ArrowForward,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
 
                     TextButton(
                         onClick = onNavigateToFavorites,

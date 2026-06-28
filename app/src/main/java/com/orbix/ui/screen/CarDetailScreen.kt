@@ -44,6 +44,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,26 +62,37 @@ import coil.compose.AsyncImage
 import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.model.label
 import com.orbix.ui.theme.WhatsappGreen
+import com.orbix.ui.util.Roles
+import com.orbix.ui.viewmodel.ReviewViewModel
 import com.orbix.ui.viewmodel.VehicleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CarDetailScreen(
     carId: String,
+    userRoles: Set<String>,
     onBack: () -> Unit,
-    onNavigateToRules: () -> Unit
+    onNavigateToRules: () -> Unit,
+    onNavigateToReview: (Long) -> Unit
 ) {
     val activity = LocalContext.current as ComponentActivity
     val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
+    val reviewVm: ReviewViewModel = viewModel()
     val vehicle = vm.vehicles.find { it.id?.toString() == carId }
+
+    LaunchedEffect(vehicle?.id) {
+        vehicle?.id?.let { reviewVm.loadVehicleReviews(it) }
+    }
 
     val carName = vehicle?.let { "${it.brand} ${it.model}" } ?: "Vehículo no encontrado"
     val carPrice = vehicle?.pricePerDay?.let {
         if (it % 1.0 == 0.0) it.toInt().toString() else it.toString()
     } ?: "0"
-    val carRating = "4.8" // Hardcoded rating as it's not in the model
+    val summary = reviewVm.vehicleSummary
+    val carRating = summary?.let { String.format("%.1f", it.averageRating) } ?: "—"
     val transmission = vehicle?.transmission ?: "Automática"
     val passengers = vehicle?.passengers ?: "Hasta 5"
+    val canReview = Roles.canReviewVehicle(userRoles) && vehicle?.id != null
 
     val scrollState = rememberScrollState()
 
@@ -161,7 +173,7 @@ fun CarDetailScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = if (vehicle != null) "Año ${vehicle.year} • Estelí, Nicaragua" else "Estelí, Nicaragua",
+                            text = if (vehicle != null) "Año ${vehicle.year.orEmpty()} • Estelí, Nicaragua" else "Estelí, Nicaragua",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -247,6 +259,45 @@ fun CarDetailScreen(
                         text = "Ver reglas del vehículo",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Reseñas",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                summary?.let {
+                    Text(
+                        text = "${it.sentimentLabel} · ${it.totalReviews} reseña(s)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (canReview) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { vehicle?.id?.let { onNavigateToReview(it) } },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Escribir reseña")
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                reviewVm.vehicleReviews.forEach { review ->
+                    VehicleReviewCard(review = review)
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                if (reviewVm.vehicleReviews.isEmpty() && !reviewVm.isLoading) {
+                    Text(
+                        text = "Aún no hay reseñas para este vehículo.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 

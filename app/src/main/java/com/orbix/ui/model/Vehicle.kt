@@ -4,7 +4,7 @@ data class Vehicle(
     val id: Long? = null,
     val brand: String,
     val model: String,
-    val year: String,
+    val year: String?,
     val transmission: String?,
     val passengers: String?,
     val pricePerDay: Double?,

@@ -1,12 +1,6 @@
 package com.orbix.ui.screen
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
@@ -36,6 +29,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -58,88 +52,67 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-
-enum class ReviewTagCategory { POSITIVE, NEUTRAL, NEGATIVE }
-
-data class ReviewTag(val label: String, val category: ReviewTagCategory)
-
-private val vehicleTags = listOf(
-    ReviewTag("Vehículo limpio", ReviewTagCategory.POSITIVE),
-    ReviewTag("Entrega puntual", ReviewTagCategory.POSITIVE),
-    ReviewTag("Entrega rápida y fácil", ReviewTagCategory.POSITIVE),
-    ReviewTag("Tal como en las fotos", ReviewTagCategory.POSITIVE),
-    ReviewTag("Excelente estado", ReviewTagCategory.POSITIVE),
-    ReviewTag("Muy cómodo", ReviewTagCategory.POSITIVE),
-    ReviewTag("No era lo que esperaba", ReviewTagCategory.NEUTRAL),
-    ReviewTag("Podría estar más limpio", ReviewTagCategory.NEUTRAL),
-    ReviewTag("Entrega con retraso leve", ReviewTagCategory.NEUTRAL),
-    ReviewTag("Descripción inexacta", ReviewTagCategory.NEUTRAL),
-    ReviewTag("Diferente a las fotos", ReviewTagCategory.NEGATIVE),
-    ReviewTag("Problemas de seguridad", ReviewTagCategory.NEGATIVE),
-    ReviewTag("Vehículo sucio", ReviewTagCategory.NEGATIVE),
-    ReviewTag("Entrega tardía", ReviewTagCategory.NEGATIVE),
-    ReviewTag("Motor con fallas", ReviewTagCategory.NEGATIVE),
-    ReviewTag("Olor desagradable", ReviewTagCategory.NEGATIVE),
-)
-
-private val hostTags = listOf(
-    ReviewTag("Anfitrión amable", ReviewTagCategory.POSITIVE),
-    ReviewTag("Respuesta rápida", ReviewTagCategory.POSITIVE),
-    ReviewTag("Muy puntual", ReviewTagCategory.POSITIVE),
-    ReviewTag("Instrucciones claras", ReviewTagCategory.POSITIVE),
-    ReviewTag("Recomendado", ReviewTagCategory.POSITIVE),
-    ReviewTag("No recibí asistencia", ReviewTagCategory.NEUTRAL),
-    ReviewTag("Comunicación lenta", ReviewTagCategory.NEUTRAL),
-    ReviewTag("Podría mejorar", ReviewTagCategory.NEUTRAL),
-    ReviewTag("Expectativas no cumplidas", ReviewTagCategory.NEUTRAL),
-    ReviewTag("Difícil de contactar", ReviewTagCategory.NEGATIVE),
-    ReviewTag("Llegó tarde", ReviewTagCategory.NEGATIVE),
-    ReviewTag("Instrucciones confusas", ReviewTagCategory.NEGATIVE),
-    ReviewTag("Actitud grosera", ReviewTagCategory.NEGATIVE),
-    ReviewTag("No recomendado", ReviewTagCategory.NEGATIVE),
-)
-
-private fun ratingBand(rating: Int): ReviewTagCategory? = when {
-    rating >= 4    -> ReviewTagCategory.POSITIVE
-    rating == 3    -> ReviewTagCategory.NEUTRAL
-    rating in 1..2 -> ReviewTagCategory.NEGATIVE
-    else           -> null
-}
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.orbix.ui.model.ReviewTag
+import com.orbix.ui.model.label
+import com.orbix.ui.model.userReviewTags
+import com.orbix.ui.model.vehicleReviewTags
+import com.orbix.ui.viewmodel.ReviewViewModel
 
 @Composable
-fun CarReviewScreen(onBack: () -> Unit, onReviewSubmitted: () -> Unit) {
-    ReviewScreenContent(
+fun CarReviewScreen(
+    vehicleId: Long,
+    onBack: () -> Unit,
+    onReviewSubmitted: () -> Unit,
+    viewModel: ReviewViewModel = viewModel()
+) {
+    ReviewFormScreen(
         title = "Califica el Vehículo",
         subtitle = "¡Cuéntanos cómo fue tu experiencia con el auto!",
         icon = Icons.Default.DirectionsCar,
         buttonText = "Enviar Reseña del Auto",
-        tags = vehicleTags,
+        availableTags = vehicleReviewTags,
+        isSubmitting = viewModel.isSubmitting,
+        errorMessage = viewModel.errorMessage,
         onBack = onBack,
-        onReviewSubmitted = onReviewSubmitted
+        onClearError = { viewModel.clearError() },
+        onSubmit = { rating, tags, comment ->
+            viewModel.submitVehicleReview(vehicleId, rating, tags, comment, onReviewSubmitted)
+        }
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserReviewScreen(onBack: () -> Unit, onReviewSubmitted: () -> Unit) {
+fun UserReviewScreen(
+    reviewedUserId: Long,
+    onBack: () -> Unit,
+    onReviewSubmitted: () -> Unit,
+    viewModel: ReviewViewModel = viewModel()
+) {
+    LaunchedEffect(reviewedUserId) {
+        viewModel.loadUserReviews(reviewedUserId)
+    }
+
+    val summary = viewModel.userSummary
     var rating by remember { mutableStateOf(0) }
     var comment by remember { mutableStateOf("") }
-    var selectedTags by remember { mutableStateOf(setOf<String>()) }
+    var selectedTags by remember { mutableStateOf(setOf<ReviewTag>()) }
     val scrollState = rememberScrollState()
-
-    val currentBand = ratingBand(rating)
-    LaunchedEffect(currentBand) {
-        selectedTags = emptySet()
-    }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Reseña", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Reseña",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Regresar")
@@ -169,162 +142,73 @@ fun UserReviewScreen(onBack: () -> Unit, onReviewSubmitted: () -> Unit) {
 
                 Box(
                     modifier = Modifier
-                        .size(260.dp)
-                        .clip(RoundedCornerShape(48.dp))
+                        .size(120.dp)
+                        .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(200.dp),
+                        modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Luis Aragón",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        modifier = Modifier.border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                            shape = RoundedCornerShape(8.dp)
+                Text(
+                    text = summary?.nombre ?: "Cliente",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if (summary != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.size(18.dp)
                         )
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "4.9",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = String.format("%.1f", summary.averageRating),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = " · ${summary.sentimentLabel}",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    summary.memberSinceYear?.let { year ->
+                        Text(
+                            text = "En Orbix desde $year",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = "En Orbix desde 2026",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = "Reseñas Muy positivas",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Card(
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    ),
-                    elevation = CardDefaults.cardElevation(0.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            repeat(5) { index ->
-                                IconButton(
-                                    onClick = { rating = index + 1 },
-                                    modifier = Modifier.size(48.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = if (index < rating) Icons.Default.Star else Icons.Outlined.StarBorder,
-                                        contentDescription = "Estrella ${index + 1}",
-                                        tint = if (index < rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                                        modifier = Modifier.size(36.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        AnimatedVisibility(
-                            visible = rating > 0,
-                            enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically()
-                        ) {
-                            Column {
-                                Spacer(modifier = Modifier.height(20.dp))
-                                RatingTagsSection(
-                                    rating = rating,
-                                    tags = hostTags,
-                                    selectedTags = selectedTags,
-                                    onTagToggled = { tag ->
-                                        selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
-                                    }
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        OutlinedTextField(
-                            value = comment,
-                            onValueChange = { comment = it },
-                            placeholder = { Text("Comentario... (Opcional)") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                            )
-                        )
-                    }
-                }
+                ReviewFormCard(
+                    rating = rating,
+                    onRatingChange = { rating = it },
+                    availableTags = userReviewTags,
+                    selectedTags = selectedTags,
+                    onTagToggled = { tag ->
+                        selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
+                        viewModel.clearError()
+                    },
+                    comment = comment,
+                    onCommentChange = {
+                        comment = it
+                        viewModel.clearError()
+                    },
+                    errorMessage = viewModel.errorMessage
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -335,22 +219,25 @@ fun UserReviewScreen(onBack: () -> Unit, onReviewSubmitted: () -> Unit) {
                     .padding(horizontal = 24.dp, vertical = 24.dp)
             ) {
                 Button(
-                    onClick = onReviewSubmitted,
+                    onClick = {
+                        viewModel.submitUserReview(
+                            reviewedUserId, rating, selectedTags.toList(), comment, onReviewSubmitted
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    enabled = rating > 0
+                    enabled = rating > 0 && !viewModel.isSubmitting
                 ) {
-                    Text(
-                        text = "Enviar reseña",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (viewModel.isSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text("Enviar reseña", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -359,28 +246,28 @@ fun UserReviewScreen(onBack: () -> Unit, onReviewSubmitted: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ReviewScreenContent(
+private fun ReviewFormScreen(
     title: String,
     subtitle: String,
-    icon: ImageVector,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     buttonText: String,
-    tags: List<ReviewTag>,
+    availableTags: List<ReviewTag>,
+    isSubmitting: Boolean,
+    errorMessage: String?,
     onBack: () -> Unit,
-    onReviewSubmitted: () -> Unit
+    onClearError: () -> Unit,
+    onSubmit: (Int, List<ReviewTag>, String) -> Unit
 ) {
     var rating by remember { mutableStateOf(0) }
     var comment by remember { mutableStateOf("") }
-    var selectedTags by remember { mutableStateOf(setOf<String>()) }
-
-    val currentBand = ratingBand(rating)
-    LaunchedEffect(currentBand) {
-        selectedTags = emptySet()
-    }
+    var selectedTags by remember { mutableStateOf(setOf<ReviewTag>()) }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Reseña", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+                title = {
+                    Text("Reseña", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Regresar")
@@ -417,203 +304,155 @@ private fun ReviewScreenContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
             Spacer(modifier = Modifier.height(8.dp))
-
             Text(
-                text = subtitle,
+                subtitle,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp),
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                ),
-                elevation = CardDefaults.cardElevation(0.dp)
+            ReviewFormCard(
+                rating = rating,
+                onRatingChange = {
+                    rating = it
+                    onClearError()
+                },
+                availableTags = availableTags,
+                selectedTags = selectedTags,
+                onTagToggled = { tag ->
+                    selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
+                    onClearError()
+                },
+                comment = comment,
+                onCommentChange = {
+                    comment = it
+                    onClearError()
+                },
+                errorMessage = errorMessage
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = { onSubmit(rating, selectedTags.toList(), comment) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                enabled = rating > 0 && !isSubmitting
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "¿Qué puntuación le darías?",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                if (isSubmitting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        repeat(5) { index ->
-                            IconButton(
-                                onClick = { rating = index + 1 },
-                                modifier = Modifier.size(48.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (index < rating) Icons.Default.Star else Icons.Outlined.StarBorder,
-                                    contentDescription = "Estrella ${index + 1}",
-                                    tint = if (index < rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                                    modifier = Modifier.size(36.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    AnimatedVisibility(
-                        visible = rating > 0,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically()
-                    ) {
-                        Column {
-                            Spacer(modifier = Modifier.height(20.dp))
-                            RatingTagsSection(
-                                rating = rating,
-                                tags = tags,
-                                selectedTags = selectedTags,
-                                onTagToggled = { tag ->
-                                    selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
-                                }
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    OutlinedTextField(
-                        value = comment,
-                        onValueChange = { comment = it },
-                        label = { Text("Escribe tu comentario...") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    Button(
-                        onClick = onReviewSubmitted,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        enabled = rating > 0
-                    ) {
-                        Text(
-                            text = buttonText,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                } else {
+                    Text(buttonText, fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
 }
 
-
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
-private fun RatingTagsSection(
+private fun ReviewFormCard(
     rating: Int,
-    tags: List<ReviewTag>,
-    selectedTags: Set<String>,
-    onTagToggled: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onRatingChange: (Int) -> Unit,
+    availableTags: List<ReviewTag>,
+    selectedTags: Set<ReviewTag>,
+    onTagToggled: (ReviewTag) -> Unit,
+    comment: String,
+    onCommentChange: (String) -> Unit,
+    errorMessage: String?
 ) {
-    val activeTags = when {
-        rating >= 4 -> tags.filter { it.category == ReviewTagCategory.POSITIVE }
-        rating == 3 -> tags.filter { it.category == ReviewTagCategory.NEUTRAL }
-        else        -> tags.filter { it.category == ReviewTagCategory.NEGATIVE }
-    }
-
-    val labelText = when {
-        rating >= 4 -> "¿Qué destacó?"
-        rating == 3 -> "¿Qué podría mejorar?"
-        else        -> "¿Qué salió mal?"
-    }
-
-    val labelColor = when {
-        rating >= 4 -> MaterialTheme.colorScheme.primary
-        rating == 3 -> MaterialTheme.colorScheme.tertiary
-        else        -> MaterialTheme.colorScheme.error
-    }
-
-    val selectedContainer = when {
-        rating >= 4 -> MaterialTheme.colorScheme.primaryContainer
-        rating == 3 -> MaterialTheme.colorScheme.tertiaryContainer
-        else        -> MaterialTheme.colorScheme.errorContainer
-    }
-
-    val selectedLabelColor = when {
-        rating >= 4 -> MaterialTheme.colorScheme.onPrimaryContainer
-        rating == 3 -> MaterialTheme.colorScheme.onTertiaryContainer
-        else        -> MaterialTheme.colorScheme.onErrorContainer
-    }
-
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = labelText,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = labelColor
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            activeTags.forEach { tag ->
-                val isSelected = tag.label in selectedTags
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { onTagToggled(tag.label) },
-                    label = {
-                        Text(
-                            text = tag.label,
-                            style = MaterialTheme.typography.labelMedium
+            Text(
+                "¿Qué puntuación le darías?",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.Center) {
+                repeat(5) { index ->
+                    IconButton(onClick = { onRatingChange(index + 1) }, modifier = Modifier.size(48.dp)) {
+                        Icon(
+                            imageVector = if (index < rating) Icons.Default.Star else Icons.Outlined.StarBorder,
+                            contentDescription = null,
+                            tint = if (index < rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.size(36.dp)
                         )
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = selectedContainer,
-                        selectedLabelColor = selectedLabelColor
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = isSelected,
-                        borderColor = MaterialTheme.colorScheme.outlineVariant,
-                        selectedBorderColor = Color.Transparent
-                    )
+                    }
+                }
+            }
+
+            if (rating > 0) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Selecciona tags (opcional)",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    availableTags.forEach { tag ->
+                        val isSelected = tag in selectedTags
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { onTagToggled(tag) },
+                            label = { Text(tag.label()) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = isSelected,
+                                borderColor = MaterialTheme.colorScheme.outlineVariant,
+                                selectedBorderColor = Color.Transparent
+                            )
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = comment,
+                onValueChange = onCommentChange,
+                label = { Text("Comentario (opcional)") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                )
+            )
+
+            errorMessage?.let { error ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
         }
     }

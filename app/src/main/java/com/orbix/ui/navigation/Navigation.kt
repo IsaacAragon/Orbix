@@ -21,10 +21,10 @@ data class TermsAndConditions(val isSignUpFlow: Boolean = false)
 object SignUp
 
 @Serializable
-object CarReview
+data class CarReview(val vehicleId: Long)
 
 @Serializable
-object UserReview
+data class UserReview(val reviewedUserId: Long)
 
 @Serializable
 object Favorites
