@@ -49,6 +49,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.orbix.ui.util.minimumBirthDateCalendar
+import com.orbix.ui.util.toApiDate
 import com.orbix.ui.viewmodel.SignUpViewModel
 import java.util.Calendar
 
@@ -61,7 +63,8 @@ fun SignUpScreen(
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var birthDate by remember { mutableStateOf("") }
+    var birthDateDisplay by remember { mutableStateOf("") }
+    var birthDateApi by remember { mutableStateOf<String?>(null) }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
@@ -71,27 +74,25 @@ fun SignUpScreen(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    val maxCalendar = Calendar.getInstance().apply {
-        add(Calendar.YEAR, -18)
-    }
-    val minCalendar = Calendar.getInstance().apply {
-        add(Calendar.YEAR, -150)
-    }
+    val today = Calendar.getInstance()
+    val maxBirthDate = minimumBirthDateCalendar()
     val datePickerDialog = DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
-            birthDate = String.format("%02d/%02d/%d", dayOfMonth, month + 1, year)
+            birthDateApi = toApiDate(dayOfMonth, month + 1, year)
+            birthDateDisplay = String.format("%02d/%02d/%d", dayOfMonth, month + 1, year)
+            viewModel.clearError()
         },
-        maxCalendar.get(Calendar.YEAR),
-        maxCalendar.get(Calendar.MONTH),
-        maxCalendar.get(Calendar.DAY_OF_MONTH)
+        today.get(Calendar.YEAR) - 25,
+        today.get(Calendar.MONTH),
+        today.get(Calendar.DAY_OF_MONTH)
     ).apply {
-        datePicker.maxDate = maxCalendar.timeInMillis
-        datePicker.minDate = minCalendar.timeInMillis
+        datePicker.maxDate = maxBirthDate.timeInMillis
     }
 
     val isFormValid = fullName.isNotBlank() &&
             email.isNotBlank() &&
+            birthDateApi != null &&
             password.isNotBlank() &&
             confirmPassword.isNotBlank() &&
             password == confirmPassword
@@ -174,9 +175,9 @@ fun SignUpScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     leadingIcon = { Icon(Icons.Default.Event, contentDescription = null) },
-                    value = birthDate,
+                    value = birthDateDisplay,
                     onValueChange = {},
-                    label = { Text("Fecha de nacimiento (opcional)") },
+                    label = { Text("Fecha de nacimiento") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     readOnly = true
@@ -232,7 +233,7 @@ fun SignUpScreen(
                 }
             )
 
-            if (confirmPassword.isNotEmpty() && password != confirmPassword) {
+            if (confirmPassword.isNotEmpty() && password != confirmPassword && viewModel.errorMessage == null) {
                 Text(
                     text = "Las contraseñas no coinciden",
                     color = MaterialTheme.colorScheme.error,
@@ -253,7 +254,14 @@ fun SignUpScreen(
 
             Button(
                 onClick = {
-                    viewModel.register(fullName, email, password, onRegisterSuccess)
+                    viewModel.register(
+                        nombre = fullName,
+                        email = email,
+                        password = password,
+                        confirmPassword = confirmPassword,
+                        fechaNacimiento = birthDateApi,
+                        onSuccess = onRegisterSuccess
+                    )
                 },
                 enabled = isFormValid && !viewModel.isLoading,
                 modifier = Modifier
