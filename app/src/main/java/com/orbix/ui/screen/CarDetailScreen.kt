@@ -45,6 +45,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -93,6 +97,8 @@ fun CarDetailScreen(
     val transmission = vehicle?.transmission ?: "Automática"
     val passengers = vehicle?.passengers ?: "Hasta 5"
     val canReview = Roles.canReviewVehicle(userRoles) && vehicle?.id != null
+    var hasRented by remember(vehicle?.id) { mutableStateOf(false) }
+    val canRent = canReview && vehicle?.isAvailable == true && !hasRented
 
     val scrollState = rememberScrollState()
 
@@ -278,14 +284,39 @@ fun CarDetailScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (canReview) {
+                if (hasRented && canReview) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = { vehicle?.id?.let { onNavigateToReview(it) } },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Escribir reseña")
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "¡Reserva confirmada!",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Cuando termines tu experiencia, deja tu reseña sobre este vehículo.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(
+                                onClick = { vehicle?.id?.let { onNavigateToReview(it) } },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Star, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Reseñar este auto", fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -424,30 +455,74 @@ fun CarDetailScreen(
                         }
                     }
 
-                    Button(
-                        onClick = { },
-                        enabled = vehicle?.available ?: false,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = WhatsappGreen,
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Chat,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(
-                                text = if (vehicle?.available == false) "No disponible" else "Contactar",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
+                    when {
+                        hasRented && canReview -> {
+                            Button(
+                                onClick = { vehicle?.id?.let { onNavigateToReview(it) } },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Reseñar este auto",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        canRent -> {
+                            Button(
+                                onClick = { hasRented = true },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                            ) {
+                                Text(
+                                    text = "Rentar",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        else -> {
+                            Button(
+                                onClick = { },
+                                enabled = vehicle?.isAvailable != false,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = WhatsappGreen,
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Chat,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = if (vehicle?.isAvailable == false) "No disponible" else "Contactar",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
                 }
