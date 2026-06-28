@@ -622,7 +622,7 @@ fun VehicleCard(
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = if (vehicle.available) {
+                    color = if (vehicle.isAvailable) {
                         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
                     } else {
                         MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)
@@ -636,12 +636,12 @@ fun VehicleCard(
                         )
                     ) {
                         Icon(
-                            imageVector = if (vehicle.available)
+                            imageVector = if (vehicle.isAvailable)
                                 Icons.Default.Star
                             else
                                 Icons.Default.DirectionsCar,
                             contentDescription = null,
-                            tint = if (vehicle.available)
+                            tint = if (vehicle.isAvailable)
                                 MaterialTheme.colorScheme.primary
                             else
                                 MaterialTheme.colorScheme.error,
@@ -651,7 +651,7 @@ fun VehicleCard(
                         Spacer(modifier = Modifier.width(4.dp))
 
                         Text(
-                            text = if (vehicle.available)
+                            text = if (vehicle.isAvailable)
                                 "Disponible"
                             else
                                 "Rentado",
@@ -778,11 +778,11 @@ fun VehicleCard(
                             vehicle.id.toString()
                         )
                     },
-                    enabled = vehicle.available,
+                    enabled = vehicle.isAvailable,
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = if (vehicle.available)
+                        text = if (vehicle.isAvailable)
                             "Rentar"
                         else
                             "No disponible"

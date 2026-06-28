@@ -9,5 +9,7 @@ data class Vehicle(
     val passengers: String,
     val pricePerDay: Double,
     val imageUrl: String,
-    val available: Boolean
-)
+    val available: Boolean? = true
+) {
+    val isAvailable: Boolean get() = available != false
+}

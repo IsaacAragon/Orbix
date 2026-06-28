@@ -20,5 +20,6 @@ data class VehicleRequest(
     val transmission: String,
     val passengers: String,
     val pricePerDay: Double,
-    val imageUrl: String = ""
+    val imageUrl: String = "",
+    val available: Boolean = true
 )
