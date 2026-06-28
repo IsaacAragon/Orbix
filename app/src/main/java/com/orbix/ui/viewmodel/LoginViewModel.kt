@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.orbix.ui.local.TokenStorage
 import com.orbix.ui.repository.AuthRepository
+import com.orbix.ui.model.AuthResponse
 import com.orbix.ui.repository.AuthResult
 import kotlinx.coroutines.launch
 
@@ -21,7 +22,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    fun login(email: String, password: String, onSuccess: () -> Unit) {
+    fun login(email: String, password: String, onSuccess: (AuthResponse) -> Unit) {
         if (email.isBlank() || password.isBlank()) {
             errorMessage = "Ingresa correo y contraseña"
             return
@@ -32,7 +33,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             errorMessage = null
 
             when (val result = authRepository.login(email, password)) {
-                is AuthResult.Success -> onSuccess()
+                is AuthResult.Success -> onSuccess(result.response)
                 is AuthResult.Error -> errorMessage = result.message
             }
 

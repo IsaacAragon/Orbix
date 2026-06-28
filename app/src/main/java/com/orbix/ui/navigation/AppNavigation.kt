@@ -63,7 +63,9 @@ fun AppNavigation() {
             ) {
                 composable<Login> {
                     LoginScreen(
-                        onLogin = { sessionViewModel.restoreSession() },
+                        onLogin = { response ->
+                            sessionViewModel.onLoginSuccessFromResponse(response)
+                        },
                         onNavigateToSignUp = { navController.navigate(SignUp) }
                     )
                 }

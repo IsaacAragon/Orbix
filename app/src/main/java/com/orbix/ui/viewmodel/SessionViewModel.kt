@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.orbix.ui.local.TokenStorage
 import com.orbix.ui.repository.AuthRepository
+import com.orbix.ui.model.AuthResponse
 import com.orbix.ui.repository.UserSession
 import kotlinx.coroutines.launch
 
@@ -42,6 +43,16 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     fun onLoginSuccess(session: UserSession) {
         sessionState = SessionState.Authenticated(session)
+    }
+
+    fun onLoginSuccessFromResponse(response: AuthResponse) {
+        sessionState = SessionState.Authenticated(
+            UserSession(
+                email = response.email,
+                roles = response.roles.toSet(),
+                permissions = response.permissions.toSet()
+            )
+        )
     }
 
     fun logout(onComplete: () -> Unit = {}) {

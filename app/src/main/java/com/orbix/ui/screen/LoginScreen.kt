@@ -43,7 +43,7 @@ import com.orbix.ui.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
-    onLogin: () -> Unit,
+    onLogin: (com.orbix.ui.model.AuthResponse) -> Unit,
     onNavigateToSignUp: () -> Unit = {},
     viewModel: LoginViewModel = viewModel()
 ) {

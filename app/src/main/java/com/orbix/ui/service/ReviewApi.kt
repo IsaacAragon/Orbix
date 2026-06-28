@@ -15,7 +15,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ReviewApi {
-    @POST("reviews")
+    @POST("reviews/vehicle")
     suspend fun createVehicleReview(@Body body: CreateVehicleReviewRequest): VehicleReviewResponse
 
     @GET("reviews/vehicle/{vehicleId}")

@@ -26,6 +26,7 @@ class AuthRepository(
         return try {
             val response = ApiClient.authApi.login(LoginRequest(email, password))
             saveSession(response)
+            tokenStorage.syncToApiClient()
             AuthResult.Success(response)
         } catch (e: HttpException) {
             when (e.code()) {
@@ -54,6 +55,7 @@ class AuthRepository(
                 )
             )
             saveSession(response)
+            tokenStorage.syncToApiClient()
             AuthResult.Success(response)
         } catch (e: HttpException) {
             AuthResult.Error(parseApiError(e, "No se pudo crear la cuenta"))
