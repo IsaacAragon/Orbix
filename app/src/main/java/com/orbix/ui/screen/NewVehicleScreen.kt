@@ -15,6 +15,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Groups
@@ -25,7 +27,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +50,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.orbix.ui.model.VehicleCategory
+import com.orbix.ui.model.label
 import com.orbix.ui.viewmodel.NewVehicleViewModel
 import com.orbix.ui.viewmodel.VehicleViewModel
 
@@ -63,11 +71,15 @@ fun NewVehicleScreen(
     var price by remember { mutableStateOf("") }
     var seats by remember { mutableStateOf("") }
     var transmission by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf<VehicleCategory?>(null) }
+    var categoryExpanded by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
 
     val isFormValid = brand.isNotBlank() && model.isNotBlank() && year.isNotBlank() &&
-            transmission.isNotBlank() && seats.isNotBlank() && price.isNotBlank()
+            transmission.isNotBlank() && seats.isNotBlank() && price.isNotBlank() &&
+            description.isNotBlank() && selectedCategory != null
 
     Scaffold(
         topBar = {
@@ -157,6 +169,42 @@ fun NewVehicleScreen(
                 singleLine = true
             )
 
+            ExposedDropdownMenuBox(
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = it },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    leadingIcon = { Icon(Icons.Default.Category, contentDescription = null) },
+                    value = selectedCategory?.label() ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Categoría") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                ExposedDropdownMenu(
+                    expanded = categoryExpanded,
+                    onDismissRequest = { categoryExpanded = false }
+                ) {
+                    VehicleCategory.entries.forEach { category ->
+                        DropdownMenuItem(
+                            text = { Text(category.label()) },
+                            onClick = {
+                                selectedCategory = category
+                                categoryExpanded = false
+                                viewModel.clearError()
+                            }
+                        )
+                    }
+                }
+            }
+
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
                 value = transmission,
@@ -198,6 +246,19 @@ fun NewVehicleScreen(
                 singleLine = true
             )
 
+            OutlinedTextField(
+                leadingIcon = { Icon(Icons.Default.Description, contentDescription = null) },
+                value = description,
+                onValueChange = {
+                    description = it
+                    viewModel.clearError()
+                },
+                label = { Text("Descripción") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                minLines = 3
+            )
+
             viewModel.errorMessage?.let { error ->
                 Text(
                     text = error,
@@ -216,7 +277,9 @@ fun NewVehicleScreen(
                         year = year,
                         transmission = transmission,
                         passengers = seats,
-                        pricePerDay = price
+                        pricePerDay = price,
+                        description = description,
+                        category = selectedCategory
                     ) {
                         listViewModel.loadVehicles()
                         onVehicleAdded()

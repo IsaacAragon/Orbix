@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.repository.VehicleRepository
 import com.orbix.ui.service.ApiResult
 import kotlinx.coroutines.launch
@@ -26,6 +27,8 @@ class NewVehicleViewModel : ViewModel() {
         transmission: String,
         passengers: String,
         pricePerDay: String,
+        description: String,
+        category: VehicleCategory?,
         onSuccess: () -> Unit
     ) {
         val price = pricePerDay.toDoubleOrNull()
@@ -33,6 +36,14 @@ class NewVehicleViewModel : ViewModel() {
             transmission.isBlank() || passengers.isBlank() || price == null
         ) {
             errorMessage = "Completa todos los campos correctamente"
+            return
+        }
+        if (description.isBlank()) {
+            errorMessage = "La descripción es obligatoria"
+            return
+        }
+        if (category == null) {
+            errorMessage = "Selecciona una categoría"
             return
         }
 
@@ -47,7 +58,9 @@ class NewVehicleViewModel : ViewModel() {
                     year = year,
                     transmission = transmission,
                     passengers = passengers,
-                    pricePerDay = price
+                    pricePerDay = price,
+                    description = description,
+                    category = category
                 )
             ) {
                 is ApiResult.Success -> onSuccess()
