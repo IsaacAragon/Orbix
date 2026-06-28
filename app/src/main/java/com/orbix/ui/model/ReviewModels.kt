@@ -3,14 +3,14 @@ package com.orbix.ui.model
 data class CreateVehicleReviewRequest(
     val vehicleId: Long,
     val rating: Int,
-    val tags: List<ReviewTag>,
+    val tags: List<String>,
     val comment: String?
 )
 
 data class VehicleReviewResponse(
     val id: Long,
     val rating: Int,
-    val tags: List<ReviewTag>,
+    val tags: List<String>,
     val comment: String?,
     val reviewerId: Long,
     val reviewerName: String,
@@ -33,14 +33,14 @@ data class VehicleReviewSummary(
 data class CreateUserReviewRequest(
     val reviewedUserId: Long,
     val rating: Int,
-    val tags: List<ReviewTag>,
+    val tags: List<String>,
     val comment: String?
 )
 
 data class UserReviewResponse(
     val id: Long,
     val rating: Int,
-    val tags: List<ReviewTag>,
+    val tags: List<String>,
     val comment: String?,
     val reviewerId: Long,
     val reviewerName: String,

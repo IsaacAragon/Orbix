@@ -5,16 +5,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.orbix.ui.model.ReviewTag
+import com.orbix.ui.model.AllReviewTagsResponse
+import com.orbix.ui.model.ReviewTagOption
 import com.orbix.ui.model.UserReviewResponse
 import com.orbix.ui.model.UserReviewSummary
 import com.orbix.ui.model.VehicleReviewResponse
 import com.orbix.ui.model.VehicleReviewSummary
 import com.orbix.ui.repository.ReviewRepository
 import com.orbix.ui.service.ApiResult
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class ReviewViewModel : ViewModel() {
+
+    companion object {
+        const val TYPE_VEHICLE = "VEHICLE"
+        const val TYPE_USER = "USER"
+    }
 
     private val repository = ReviewRepository()
 
@@ -31,8 +39,61 @@ class ReviewViewModel : ViewModel() {
         private set
     var isSubmitting by mutableStateOf(false)
         private set
+    var isLoadingTags by mutableStateOf(false)
+        private set
     var errorMessage by mutableStateOf<String?>(null)
         private set
+
+    private val _availableTags = MutableStateFlow<List<ReviewTagOption>>(emptyList())
+    val availableTags = _availableTags.asStateFlow()
+
+    private val _selectedTags = MutableStateFlow<Set<String>>(emptySet())
+    val selectedTags = _selectedTags.asStateFlow()
+
+    private var allTags: AllReviewTagsResponse? = null
+    private var reviewType = TYPE_VEHICLE
+    private var lastRating = 5
+
+    fun setReviewType(type: String) {
+        reviewType = type
+        if (allTags != null) {
+            updateTagsForRating(lastRating)
+        }
+    }
+
+    fun loadAllTags() {
+        viewModelScope.launch {
+            isLoadingTags = true
+            when (val result = repository.getAllReviewTags()) {
+                is ApiResult.Success -> {
+                    allTags = result.data
+                    updateTagsForRating(lastRating)
+                }
+                is ApiResult.Error -> errorMessage = result.message
+            }
+            isLoadingTags = false
+        }
+    }
+
+    fun onRatingChanged(rating: Int) {
+        lastRating = rating
+        updateTagsForRating(rating)
+    }
+
+    private fun updateTagsForRating(rating: Int) {
+        _selectedTags.value = emptySet()
+        val tags = when (reviewType) {
+            TYPE_USER -> allTags?.user?.get(rating)
+            else -> allTags?.vehicle?.get(rating)
+        } ?: emptyList()
+        _availableTags.value = tags
+    }
+
+    fun toggleTag(code: String) {
+        _selectedTags.value = _selectedTags.value.toMutableSet().apply {
+            if (contains(code)) remove(code) else add(code)
+        }
+    }
 
     fun loadVehicleReviews(vehicleId: Long) {
         viewModelScope.launch {
@@ -73,7 +134,6 @@ class ReviewViewModel : ViewModel() {
     fun submitVehicleReview(
         vehicleId: Long,
         rating: Int,
-        tags: List<ReviewTag>,
         comment: String?,
         onSuccess: () -> Unit
     ) {
@@ -81,7 +141,14 @@ class ReviewViewModel : ViewModel() {
             isSubmitting = true
             errorMessage = null
 
-            when (val result = repository.createVehicleReview(vehicleId, rating, tags, comment)) {
+            when (
+                val result = repository.createVehicleReview(
+                    vehicleId,
+                    rating,
+                    _selectedTags.value.toList(),
+                    comment
+                )
+            ) {
                 is ApiResult.Success -> {
                     loadVehicleReviews(vehicleId)
                     onSuccess()
@@ -96,7 +163,6 @@ class ReviewViewModel : ViewModel() {
     fun submitUserReview(
         reviewedUserId: Long,
         rating: Int,
-        tags: List<ReviewTag>,
         comment: String?,
         onSuccess: () -> Unit
     ) {
@@ -104,7 +170,14 @@ class ReviewViewModel : ViewModel() {
             isSubmitting = true
             errorMessage = null
 
-            when (val result = repository.createUserReview(reviewedUserId, rating, tags, comment)) {
+            when (
+                val result = repository.createUserReview(
+                    reviewedUserId,
+                    rating,
+                    _selectedTags.value.toList(),
+                    comment
+                )
+            ) {
                 is ApiResult.Success -> {
                     loadUserReviews(reviewedUserId)
                     onSuccess()

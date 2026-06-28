@@ -1,8 +1,8 @@
 package com.orbix.ui.repository
 
+import com.orbix.ui.model.AllReviewTagsResponse
 import com.orbix.ui.model.CreateUserReviewRequest
 import com.orbix.ui.model.CreateVehicleReviewRequest
-import com.orbix.ui.model.ReviewTag
 import com.orbix.ui.model.UserReviewResponse
 import com.orbix.ui.model.UserReviewSummary
 import com.orbix.ui.model.VehicleReviewResponse
@@ -31,7 +31,7 @@ class ReviewRepository {
     suspend fun createVehicleReview(
         vehicleId: Long,
         rating: Int,
-        tags: List<ReviewTag>,
+        tags: List<String>,
         comment: String?
     ): ApiResult<VehicleReviewResponse> {
         return try {
@@ -71,7 +71,7 @@ class ReviewRepository {
     suspend fun createUserReview(
         reviewedUserId: Long,
         rating: Int,
-        tags: List<ReviewTag>,
+        tags: List<String>,
         comment: String?
     ): ApiResult<UserReviewResponse> {
         return try {
@@ -89,6 +89,14 @@ class ReviewRepository {
             }
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error de conexión")
+        }
+    }
+
+    suspend fun getAllReviewTags(): ApiResult<AllReviewTagsResponse> {
+        return try {
+            ApiResult.Success(ApiClient.reviewApi.getAllReviewTags())
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error al cargar tags de reseña")
         }
     }
 }

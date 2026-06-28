@@ -12,8 +12,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,46 +31,38 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-
 import coil.compose.AsyncImage
-
-import com.orbix.ui.model.ReviewTag
-import com.orbix.ui.model.label
-import com.orbix.ui.model.userReviewTags
-import com.orbix.ui.model.vehicleReviewTags
 import com.orbix.ui.viewmodel.ReviewViewModel
 import com.orbix.ui.viewmodel.VehicleViewModel
 
@@ -86,21 +76,26 @@ fun CarReviewScreen(
     val activity = androidx.compose.ui.platform.LocalContext.current as? androidx.activity.ComponentActivity
     val vehicleViewModel: VehicleViewModel? = activity?.let { viewModel(viewModelStoreOwner = it) }
     val vehicle = vehicleViewModel?.vehicles?.find { it.id == vehicleId }
-    val imageUrl = vehicle?.imageUrl
+
+    LaunchedEffect(Unit) {
+        viewModel.setReviewType(ReviewViewModel.TYPE_VEHICLE)
+        viewModel.loadAllTags()
+    }
 
     ReviewFormScreen(
         title = "Califica el Vehículo",
-        subtitle = if (vehicle != null) "¡Cuéntanos cómo fue tu experiencia con el ${vehicle.brand} ${vehicle.model}!" else "¡Cuéntanos cómo fue tu experiencia con el auto!",
+        subtitle = if (vehicle != null) {
+            "¡Cuéntanos cómo fue tu experiencia con el ${vehicle.brand} ${vehicle.model}!"
+        } else {
+            "¡Cuéntanos cómo fue tu experiencia con el auto!"
+        },
         icon = Icons.Default.DirectionsCar,
-        imageUrl = imageUrl,
+        imageUrl = vehicle?.imageUrl,
         buttonText = "Enviar Reseña del Auto",
-        availableTags = vehicleReviewTags,
-        isSubmitting = viewModel.isSubmitting,
-        errorMessage = viewModel.errorMessage,
+        viewModel = viewModel,
         onBack = onBack,
-        onClearError = { viewModel.clearError() },
-        onSubmit = { rating, tags, comment ->
-            viewModel.submitVehicleReview(vehicleId, rating, tags, comment, onReviewSubmitted)
+        onSubmit = { rating, comment ->
+            viewModel.submitVehicleReview(vehicleId, rating, comment, onReviewSubmitted)
         }
     )
 }
@@ -114,26 +109,18 @@ fun UserReviewScreen(
     viewModel: ReviewViewModel = viewModel()
 ) {
     LaunchedEffect(reviewedUserId) {
+        viewModel.setReviewType(ReviewViewModel.TYPE_USER)
+        viewModel.loadAllTags()
         viewModel.loadUserReviews(reviewedUserId)
     }
 
     val summary = viewModel.userSummary
-    var rating by remember { mutableStateOf(0) }
+    var rating by remember { mutableIntStateOf(5) }
     var comment by remember { mutableStateOf("") }
-    var selectedTags by remember { mutableStateOf(setOf<ReviewTag>()) }
     val scrollState = rememberScrollState()
 
-    val filteredTags = remember(rating) {
-        when {
-            rating >= 4 -> userReviewTags
-            rating == 3 -> userReviewTags.filter { it != ReviewTag.RECOMENDADO && it != ReviewTag.ANFITRION_AMABLE && it != ReviewTag.RESPETUOSO }
-            else -> emptyList()
-        }
-    }
-
-    LaunchedEffect(rating) {
-        selectedTags = selectedTags.intersect(filteredTags.toSet())
-    }
+    val availableTags by viewModel.availableTags.collectAsState()
+    val selectedTags by viewModel.selectedTags.collectAsState()
 
     Scaffold(
         topBar = {
@@ -227,11 +214,16 @@ fun UserReviewScreen(
 
                 ReviewFormCard(
                     rating = rating,
-                    onRatingChange = { rating = it },
-                    availableTags = filteredTags,
+                    onRatingChange = { newRating ->
+                        rating = newRating
+                        viewModel.onRatingChanged(newRating)
+                        viewModel.clearError()
+                    },
+                    availableTags = availableTags,
                     selectedTags = selectedTags,
-                    onTagToggled = { tag ->
-                        selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
+                    isLoadingTags = viewModel.isLoadingTags,
+                    onTagToggle = {
+                        viewModel.toggleTag(it)
                         viewModel.clearError()
                     },
                     comment = comment,
@@ -253,7 +245,10 @@ fun UserReviewScreen(
                 Button(
                     onClick = {
                         viewModel.submitUserReview(
-                            reviewedUserId, rating, selectedTags.toList(), comment, onReviewSubmitted
+                            reviewedUserId,
+                            rating,
+                            comment,
+                            onReviewSubmitted
                         )
                     },
                     modifier = Modifier
@@ -281,32 +276,19 @@ fun UserReviewScreen(
 private fun ReviewFormScreen(
     title: String,
     subtitle: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     imageUrl: String? = null,
     buttonText: String,
-    availableTags: List<ReviewTag>,
-    isSubmitting: Boolean,
-    errorMessage: String?,
+    viewModel: ReviewViewModel,
     onBack: () -> Unit,
-    onClearError: () -> Unit,
-    onSubmit: (Int, List<ReviewTag>, String) -> Unit
+    onSubmit: (Int, String) -> Unit
 ) {
-    var rating by remember { mutableStateOf(0) }
+    var rating by remember { mutableIntStateOf(5) }
     var comment by remember { mutableStateOf("") }
-    var selectedTags by remember { mutableStateOf(setOf<ReviewTag>()) }
     val scrollState = rememberScrollState()
 
-    val filteredTags = remember(rating, availableTags) {
-        when {
-            rating >= 4 -> availableTags
-            rating == 3 -> availableTags.filter { it != ReviewTag.RECOMENDADO && it != ReviewTag.ANFITRION_AMABLE && it != ReviewTag.RESPETUOSO }
-            else -> emptyList()
-        }
-    }
-
-    LaunchedEffect(rating) {
-        selectedTags = selectedTags.intersect(filteredTags.toSet())
-    }
+    val availableTags by viewModel.availableTags.collectAsState()
+    val selectedTags by viewModel.selectedTags.collectAsState()
 
     Scaffold(
         topBar = {
@@ -391,22 +373,24 @@ private fun ReviewFormScreen(
 
                 ReviewFormCard(
                     rating = rating,
-                    onRatingChange = {
-                        rating = it
-                        onClearError()
+                    onRatingChange = { newRating ->
+                        rating = newRating
+                        viewModel.onRatingChanged(newRating)
+                        viewModel.clearError()
                     },
-                    availableTags = filteredTags,
+                    availableTags = availableTags,
                     selectedTags = selectedTags,
-                    onTagToggled = { tag ->
-                        selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
-                        onClearError()
+                    isLoadingTags = viewModel.isLoadingTags,
+                    onTagToggle = {
+                        viewModel.toggleTag(it)
+                        viewModel.clearError()
                     },
                     comment = comment,
                     onCommentChange = {
                         comment = it
-                        onClearError()
+                        viewModel.clearError()
                     },
-                    errorMessage = errorMessage
+                    errorMessage = viewModel.errorMessage
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -418,14 +402,14 @@ private fun ReviewFormScreen(
                     .padding(horizontal = 24.dp, vertical = 24.dp)
             ) {
                 Button(
-                    onClick = { onSubmit(rating, selectedTags.toList(), comment) },
+                    onClick = { onSubmit(rating, comment) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    enabled = rating > 0 && !isSubmitting
+                    enabled = rating > 0 && !viewModel.isSubmitting
                 ) {
-                    if (isSubmitting) {
+                    if (viewModel.isSubmitting) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             color = MaterialTheme.colorScheme.onPrimary
@@ -439,14 +423,15 @@ private fun ReviewFormScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReviewFormCard(
     rating: Int,
     onRatingChange: (Int) -> Unit,
-    availableTags: List<ReviewTag>,
-    selectedTags: Set<ReviewTag>,
-    onTagToggled: (ReviewTag) -> Unit,
+    availableTags: List<com.orbix.ui.model.ReviewTagOption>,
+    selectedTags: Set<String>,
+    isLoadingTags: Boolean,
+    onTagToggle: (String) -> Unit,
     comment: String,
     onCommentChange: (String) -> Unit,
     errorMessage: String?
@@ -503,38 +488,16 @@ private fun ReviewFormCard(
                 exit = shrinkVertically() + fadeOut()
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (availableTags.isNotEmpty()) {
+                    if (isLoadingTags) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "Selecciona tags (opcional)",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.fillMaxWidth()
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    } else {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        ReviewTagsSection(
+                            tags = availableTags,
+                            selected = selectedTags,
+                            onToggle = onTagToggle
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            availableTags.forEach { tag ->
-                                val isSelected = tag in selectedTags
-                                FilterChip(
-                                    selected = isSelected,
-                                    onClick = { onTagToggled(tag) },
-                                    label = { Text(tag.label()) },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                    ),
-                                    border = FilterChipDefaults.filterChipBorder(
-                                        enabled = true,
-                                        selected = isSelected,
-                                        borderColor = MaterialTheme.colorScheme.outlineVariant,
-                                        selectedBorderColor = Color.Transparent
-                                    )
-                                )
-                            }
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))

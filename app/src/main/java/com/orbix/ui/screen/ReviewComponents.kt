@@ -2,31 +2,35 @@ package com.orbix.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.orbix.ui.model.ReviewTag
+import com.orbix.ui.model.ReviewTagOption
 import com.orbix.ui.model.VehicleReviewResponse
-import com.orbix.ui.model.label
+import com.orbix.ui.model.formatTagCode
 import com.orbix.ui.util.formatFecha
 
 @Composable
@@ -43,9 +47,52 @@ fun StarRatingDisplay(rating: Int, modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ReviewTagsRow(tags: List<ReviewTag>, modifier: Modifier = Modifier) {
-    val tagsText = tags.joinToString(" · ") { it.label() }
+fun ReviewTagsSection(
+    tags: List<ReviewTagOption>,
+    selected: Set<String>,
+    onToggle: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (tags.isEmpty()) return
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = "¿Qué destacó?",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            tags.forEach { tag ->
+                val isSelected = tag.code in selected
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { onToggle(tag.code) },
+                    label = { Text(tag.label) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isSelected,
+                        borderColor = MaterialTheme.colorScheme.outlineVariant,
+                        selectedBorderColor = Color.Transparent
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ReviewTagsRow(tags: List<String>, modifier: Modifier = Modifier) {
+    val tagsText = tags.joinToString(" · ") { formatTagCode(it) }
     Text(
         text = tagsText,
         style = MaterialTheme.typography.labelSmall,
