@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.layout.ContentScale
@@ -59,28 +61,34 @@ import coil.compose.AsyncImage
 //Incorporación de datos de la Api
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.orbix.ui.model.Vehicle
+import com.orbix.ui.util.Permissions
 import com.orbix.ui.viewmodel.VehicleViewModel
 
 @Composable
 fun HomeScreen(
+    userPermissions: Set<String>,
     onNavigateToCarDetail: (String) -> Unit,
     onNavigateToNewVehicle: () -> Unit,
     onNavigateToSearch: () -> Unit
 ) {
-    val vm: VehicleViewModel = viewModel()
+    val activity = LocalContext.current as ComponentActivity
+    val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
+    val canCreateVehicle = Permissions.canCreateVehicle(userPermissions)
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToNewVehicle,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Registrar Vehículo"
-                )
+            if (canCreateVehicle) {
+                FloatingActionButton(
+                    onClick = onNavigateToNewVehicle,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Registrar Vehículo"
+                    )
+                }
             }
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -614,7 +622,7 @@ fun VehicleCard(
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = if (vehicle.available) {
+                    color = if (vehicle.isAvailable) {
                         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
                     } else {
                         MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)
@@ -628,12 +636,12 @@ fun VehicleCard(
                         )
                     ) {
                         Icon(
-                            imageVector = if (vehicle.available)
+                            imageVector = if (vehicle.isAvailable)
                                 Icons.Default.Star
                             else
                                 Icons.Default.DirectionsCar,
                             contentDescription = null,
-                            tint = if (vehicle.available)
+                            tint = if (vehicle.isAvailable)
                                 MaterialTheme.colorScheme.primary
                             else
                                 MaterialTheme.colorScheme.error,
@@ -643,7 +651,7 @@ fun VehicleCard(
                         Spacer(modifier = Modifier.width(4.dp))
 
                         Text(
-                            text = if (vehicle.available)
+                            text = if (vehicle.isAvailable)
                                 "Disponible"
                             else
                                 "Rentado",
@@ -770,11 +778,11 @@ fun VehicleCard(
                             vehicle.id.toString()
                         )
                     },
-                    enabled = vehicle.available,
+                    enabled = vehicle.isAvailable,
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = if (vehicle.available)
+                        text = if (vehicle.isAvailable)
                             "Rentar"
                         else
                             "No disponible"

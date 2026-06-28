@@ -1,5 +1,6 @@
 package com.orbix.ui.screen
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -47,10 +48,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+
+import coil.compose.AsyncImage
+
 import com.orbix.ui.theme.WhatsappGreen
+import com.orbix.ui.viewmodel.VehicleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,10 +67,17 @@ fun CarDetailScreen(
     onBack: () -> Unit,
     onNavigateToRules: () -> Unit
 ) {
+    val activity = LocalContext.current as ComponentActivity
+    val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
+    val vehicle = vm.vehicles.find { it.id.toString() == carId }
 
-    val carName = if (carId == "1") "Toyota Corolla" else "Toyota Yaris"
-    val carPrice = if (carId == "1") "35" else "25"
-    val carRating = if (carId == "1") "4.9" else "4.8"
+    val carName = vehicle?.let { "${it.brand} ${it.model}" } ?: "Vehículo no encontrado"
+    val carPrice = vehicle?.pricePerDay?.let {
+        if (it % 1.0 == 0.0) it.toInt().toString() else it.toString()
+    } ?: "0"
+    val carRating = "4.8" // Hardcoded rating as it's not in the model
+    val transmission = vehicle?.transmission ?: "Automática"
+    val passengers = vehicle?.passengers ?: "Hasta 5"
 
     val scrollState = rememberScrollState()
 
@@ -102,7 +117,7 @@ fun CarDetailScreen(
                     .verticalScroll(scrollState)
                     .padding(horizontal = 24.dp)
             ) {
-                // Car Image Placeholder
+                // Car Image Box using AsyncImage
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -111,12 +126,21 @@ fun CarDetailScreen(
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.DirectionsCar,
-                        contentDescription = null,
-                        modifier = Modifier.size(96.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                    )
+                    if (vehicle != null && vehicle.imageUrl.isNotBlank()) {
+                        AsyncImage(
+                            model = vehicle.imageUrl,
+                            contentDescription = carName,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.DirectionsCar,
+                            contentDescription = null,
+                            modifier = Modifier.size(96.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -134,7 +158,7 @@ fun CarDetailScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "Estelí, Nicaragua",
+                            text = if (vehicle != null) "Año ${vehicle.year} • Estelí, Nicaragua" else "Estelí, Nicaragua",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -171,8 +195,8 @@ fun CarDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    SpecItem(icon = Icons.Default.Settings, label = "Transmisión", value = "Automática")
-                    SpecItem(icon = Icons.Default.DirectionsCar, label = "Pasajeros", value = "Hasta 5")
+                    SpecItem(icon = Icons.Default.Settings, label = "Transmisión", value = transmission)
+                    SpecItem(icon = Icons.Default.DirectionsCar, label = "Pasajeros", value = passengers)
                     SpecItem(icon = Icons.Default.LocalGasStation, label = "Combustible", value = "Gasolina")
                 }
 
@@ -341,6 +365,7 @@ fun CarDetailScreen(
 
                     Button(
                         onClick = { },
+                        enabled = vehicle?.available ?: false,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = WhatsappGreen,
                             contentColor = Color.White
@@ -358,7 +383,7 @@ fun CarDetailScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = "Contactar",
+                                text = if (vehicle?.available == false) "No disponible" else "Contactar",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )

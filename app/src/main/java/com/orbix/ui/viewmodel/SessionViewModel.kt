@@ -1,0 +1,60 @@
+package com.orbix.ui.viewmodel
+
+import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.orbix.ui.local.TokenStorage
+import com.orbix.ui.repository.AuthRepository
+import com.orbix.ui.repository.UserSession
+import kotlinx.coroutines.launch
+
+sealed class SessionState {
+    data object Loading : SessionState()
+    data object Unauthenticated : SessionState()
+    data class Authenticated(val session: UserSession) : SessionState()
+}
+
+class SessionViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val authRepository = AuthRepository(TokenStorage(application))
+
+    var sessionState by mutableStateOf<SessionState>(SessionState.Loading)
+        private set
+
+    init {
+        restoreSession()
+    }
+
+    fun restoreSession() {
+        viewModelScope.launch {
+            sessionState = SessionState.Loading
+            val session = authRepository.restoreSession()
+            sessionState = if (session != null) {
+                SessionState.Authenticated(session)
+            } else {
+                SessionState.Unauthenticated
+            }
+        }
+    }
+
+    fun onLoginSuccess(session: UserSession) {
+        sessionState = SessionState.Authenticated(session)
+    }
+
+    fun logout(onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            authRepository.clearSession()
+            sessionState = SessionState.Unauthenticated
+            onComplete()
+        }
+    }
+
+    val permissions: Set<String>
+        get() = (sessionState as? SessionState.Authenticated)?.session?.permissions ?: emptySet()
+
+    val email: String
+        get() = (sessionState as? SessionState.Authenticated)?.session?.email ?: ""
+}

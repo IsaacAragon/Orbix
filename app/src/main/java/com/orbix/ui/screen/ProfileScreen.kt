@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    userEmail: String,
     onLogout: () -> Unit,
     onNavigateToTermsAndConditions: () -> Unit,
     onNavigateToCarReview: () -> Unit,
@@ -102,13 +103,13 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             Text(
-                text = "Isaac Aragón",
+                text = userEmail.substringBefore("@").replace(".", " ").replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold
             )
-            
+
             Text(
-                text = "isaac.aragon@orbix.com",
+                text = userEmail,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -148,7 +149,7 @@ fun ProfileScreen(
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    text = "Crear cuenta (Demo)",
+                                    text = "Crear cuenta",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )

@@ -2,8 +2,14 @@ package com.orbix.ui.navigation
 
 import android.widget.Toast
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -26,204 +32,202 @@ import com.orbix.ui.screen.HostDashboardScreen
 import com.orbix.ui.screen.CarManagementScreen
 import com.orbix.ui.screen.HostRulesScreen
 import com.orbix.ui.screen.RentalManagementScreen
+import com.orbix.ui.viewmodel.SessionState
+import com.orbix.ui.viewmodel.SessionViewModel
 
 @Composable
 fun AppNavigation() {
+    val sessionViewModel: SessionViewModel = viewModel()
     val navController = rememberNavController()
+    val context = LocalContext.current
 
-    NavHost(
-        navController = navController,
-        startDestination = Login
-    ) {
+    val onRegisterSuccess: () -> Unit = {
+        sessionViewModel.restoreSession()
+        Toast.makeText(context, "¡Cuenta creada con éxito!", Toast.LENGTH_LONG).show()
+    }
 
-        composable<Login> {
-            LoginScreen(
-                onLogin = {
-                    navController.navigate(Home) {
-                        popUpTo(Login) { inclusive = true }
-                        launchSingleTop = true
-                    }
+    when (val state = sessionViewModel.sessionState) {
+        SessionState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        SessionState.Unauthenticated -> {
+            NavHost(
+                navController = navController,
+                startDestination = Login
+            ) {
+                composable<Login> {
+                    LoginScreen(
+                        onLogin = { sessionViewModel.restoreSession() },
+                        onNavigateToSignUp = { navController.navigate(SignUp) }
+                    )
                 }
-            )
-        }
 
-        composable<Home> {
-            MainScreen(
-                onLogout = {
-                    navController.navigate(Login) {
-                        popUpTo(Home) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-
-                onNavigateToCarReview = {
-                    navController.navigate(CarReview)
-                },
-
-                onNavigateToUserReview = {
-                    navController.navigate(UserReview)
-                },
-                onNavigateToCarDetail = { carId ->
-                    navController.navigate(CarDetail(carId))
-                },
-                onNavigateToNewVehicle = {
-                    navController.navigate(NewVehicle)
-                },
-                onNavigateToTermsAndConditions = {
-                    navController.navigate(TermsAndConditions(isSignUpFlow = false))
-                },
-                onNavigateToFavorites = {
-                    navController.navigate(Favorites)
-                },
-                onNavigateToSignUp = {
-                    navController.navigate(SignUp)
-                },
-                onNavigateToIDVerification = {
-                    navController.navigate(IDVerification)
-                },
-                onNavigateToSearch = {
-                    navController.navigate(Search)
+                composable<SignUp> {
+                    SignUpScreen(
+                        onBack = { navController.popBackStack() },
+                        onRegisterSuccess = onRegisterSuccess
+                    )
                 }
-            )
+            }
         }
 
-        composable<CarDetail> { backStackEntry ->
-            val carDetail: CarDetail = backStackEntry.toRoute()
-            CarDetailScreen(
-                carId = carDetail.carId,
-                onBack = { navController.popBackStack() },
-                onNavigateToRules = {
-                    navController.navigate(HostRules)
+        is SessionState.Authenticated -> {
+            NavHost(
+                navController = navController,
+                startDestination = Home
+            ) {
+                composable<Home> {
+                    MainScreen(
+                        userEmail = state.session.email,
+                        userPermissions = state.session.permissions,
+                        onLogout = { sessionViewModel.logout() },
+                        onNavigateToCarReview = { navController.navigate(CarReview) },
+                        onNavigateToUserReview = { navController.navigate(UserReview) },
+                        onNavigateToCarDetail = { carId ->
+                            navController.navigate(CarDetail(carId))
+                        },
+                        onNavigateToNewVehicle = { navController.navigate(NewVehicle) },
+                        onNavigateToTermsAndConditions = {
+                            navController.navigate(TermsAndConditions(isSignUpFlow = false))
+                        },
+                        onNavigateToFavorites = { navController.navigate(Favorites) },
+                        onNavigateToSignUp = { navController.navigate(SignUp) },
+                        onNavigateToIDVerification = { navController.navigate(IDVerification) },
+                        onNavigateToSearch = { navController.navigate(Search) }
+                    )
                 }
-            )
-        }
 
-        composable<NewVehicle> {
-            NewVehicleScreen(
-                onBack = { navController.popBackStack() },
-                onVehicleAdded = { navController.popBackStack() }
-            )
-        }
-
-        composable<TermsAndConditions> { backStackEntry ->
-            val termsRoute: TermsAndConditions = backStackEntry.toRoute()
-            val context = LocalContext.current
-            TermsAndConditionsScreen(
-                onBack = { navController.popBackStack() },
-                onAccept = {
-                    if (termsRoute.isSignUpFlow) {
-                        Toast.makeText(context, "¡Cuenta creada con éxito!", Toast.LENGTH_LONG).show()
-                        navController.navigate(Home) {
-                            popUpTo(SignUp) { inclusive = true }
+                composable<CarDetail> { backStackEntry ->
+                    val carDetail: CarDetail = backStackEntry.toRoute()
+                    CarDetailScreen(
+                        carId = carDetail.carId,
+                        onBack = { navController.popBackStack() },
+                        onNavigateToRules = {
+                            navController.navigate(HostRules)
                         }
-                    } else {
-                        navController.popBackStack()
-                    }
+                    )
                 }
-            )
-        }
 
-        composable<SignUp> {
-            SignUpScreen(
-                onBack = { navController.popBackStack() },
-                onNavigateToTerms = {
-                    navController.navigate(TermsAndConditions(isSignUpFlow = true))
+                composable<NewVehicle> {
+                    NewVehicleScreen(
+                        onBack = { navController.popBackStack() },
+                        onVehicleAdded = {
+                            Toast.makeText(context, "Vehículo publicado", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack()
+                        }
+                    )
                 }
-            )
-        }
 
-        composable<CarReview> {
-            CarReviewScreen(
-                onBack = { navController.popBackStack() },
-                onReviewSubmitted = {
-                    navController.popBackStack()
+                composable<TermsAndConditions> { backStackEntry ->
+                    val termsRoute: TermsAndConditions = backStackEntry.toRoute()
+                    TermsAndConditionsScreen(
+                        onBack = { navController.popBackStack() },
+                        onAccept = {
+                            if (!termsRoute.isSignUpFlow) {
+                                navController.popBackStack()
+                            }
+                        }
+                    )
                 }
-            )
-        }
 
-        composable<UserReview> {
-            UserReviewScreen(
-                onBack = { navController.popBackStack() },
-                onReviewSubmitted = {
-                    navController.popBackStack()
+                composable<SignUp> {
+                    SignUpScreen(
+                        onBack = { navController.popBackStack() },
+                        onRegisterSuccess = {
+                            onRegisterSuccess()
+                            navController.popBackStack()
+                        }
+                    )
                 }
-            )
-        }
 
-        composable<Favorites> {
-            FavoritesScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable<IDVerification> {
-            IDVerificationScreen(
-                onBack = {
-                    navController.popBackStack()
+                composable<CarReview> {
+                    CarReviewScreen(
+                        onBack = { navController.popBackStack() },
+                        onReviewSubmitted = { navController.popBackStack() }
+                    )
                 }
-            )
-        }
 
-        composable<Search> {
-            SearchScreen(
-                onBack = {
-                    navController.popBackStack()
-                },
-                onVehicleSelected = {
-                    navController.navigate(RentalDetail)
+                composable<UserReview> {
+                    UserReviewScreen(
+                        onBack = { navController.popBackStack() },
+                        onReviewSubmitted = { navController.popBackStack() }
+                    )
                 }
-            )
-        }
 
-        composable<RentalDetail> {
-            RentalDetailScreen(
-                onBack = { navController.popBackStack() },
-                onNavigateToCarDetail = {
-                    navController.navigate(CarDetail("1"))
-                },
-                onNavigateToHostDetail = {
-                    navController.navigate(HostDetail)
+                composable<Favorites> {
+                    FavoritesScreen(onBack = { navController.popBackStack() })
                 }
-            )
-        }
 
-        composable<HostDetail> {
-            HostDetailScreen(
-                onBack = { navController.popBackStack() },
-                onNavigateToDashboard = {
-                    navController.navigate(HostDashboard)
+                composable<IDVerification> {
+                    IDVerificationScreen(onBack = { navController.popBackStack() })
                 }
-            )
-        }
 
-        composable<HostDashboard> {
-            HostDashboardScreen(
-                onBack = { navController.popBackStack() },
-                onNavigateToCarManagement = {
-                    navController.navigate(CarManagement)
-                },
-                onNavigateToRentalManagement = {
-                    navController.navigate(RentalManagement)
+                composable<Search> {
+                    SearchScreen(
+                        onBack = { navController.popBackStack() },
+                        onVehicleSelected = {
+                            navController.navigate(RentalDetail)
+                        }
+                    )
                 }
-            )
-        }
 
-        composable<CarManagement> {
-            CarManagementScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
+                composable<RentalDetail> {
+                    RentalDetailScreen(
+                        onBack = { navController.popBackStack() },
+                        onNavigateToCarDetail = {
+                            navController.navigate(CarDetail("1"))
+                        },
+                        onNavigateToHostDetail = {
+                            navController.navigate(HostDetail)
+                        }
+                    )
+                }
 
-        composable<RentalManagement> {
-            RentalManagementScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
+                composable<HostDetail> {
+                    HostDetailScreen(
+                        onBack = { navController.popBackStack() },
+                        onNavigateToDashboard = {
+                            navController.navigate(HostDashboard)
+                        }
+                    )
+                }
 
-        composable<HostRules> {
-            HostRulesScreen(
-                onBack = { navController.popBackStack() }
-            )
+                composable<HostDashboard> {
+                    HostDashboardScreen(
+                        onBack = { navController.popBackStack() },
+                        onNavigateToCarManagement = {
+                            navController.navigate(CarManagement)
+                        },
+                        onNavigateToRentalManagement = {
+                            navController.navigate(RentalManagement)
+                        }
+                    )
+                }
+
+                composable<CarManagement> {
+                    CarManagementScreen(
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable<RentalManagement> {
+                    RentalManagementScreen(
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable<HostRules> {
+                    HostRulesScreen(
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+            }
         }
     }
 }

@@ -23,29 +23,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.orbix.R
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.orbix.ui.viewmodel.LoginViewModel
 
 @Composable
-fun LoginScreen(onLogin: () -> Unit) {
-
-    val scope = rememberCoroutineScope()
+fun LoginScreen(
+    onLogin: () -> Unit,
+    onNavigateToSignUp: () -> Unit = {},
+    viewModel: LoginViewModel = viewModel()
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
     var showPassword by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -62,7 +65,7 @@ fun LoginScreen(onLogin: () -> Unit) {
             Image(
                 modifier = Modifier.size(100.dp),
                 painter = painterResource(id = R.drawable.orbix512),
-                contentDescription = null // Imagen decorativa
+                contentDescription = null
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -85,7 +88,10 @@ fun LoginScreen(onLogin: () -> Unit) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = {
+                            email = it
+                            viewModel.clearError()
+                        },
                         label = { Text("Correo electrónico") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -94,36 +100,47 @@ fun LoginScreen(onLogin: () -> Unit) {
 
                     OutlinedTextField(
                         value = password,
-                        onValueChange = { password = it },
+                        onValueChange = {
+                            password = it
+                            viewModel.clearError()
+                        },
                         label = { Text("Contraseña") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        visualTransformation = if (showPassword)
-                            androidx.compose.ui.text.input.VisualTransformation.None
-                        else
-                            androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        visualTransformation = if (showPassword) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
                         trailingIcon = {
                             IconButton(onClick = { showPassword = !showPassword }) {
                                 Icon(
-                                    imageVector = if (showPassword)
+                                    imageVector = if (showPassword) {
                                         Icons.Default.Visibility
-                                    else
-                                        Icons.Default.VisibilityOff,
+                                    } else {
+                                        Icons.Default.VisibilityOff
+                                    },
                                     contentDescription = "Mostrar contraseña"
                                 )
                             }
                         }
                     )
+
+                    viewModel.errorMessage?.let { error ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = {
-                            scope.launch {
-                                isLoading = true
-                                delay(750)
-                                isLoading = false
-                                onLogin()
-                            }
+                            viewModel.login(email, password, onLogin)
                         },
+                        enabled = !viewModel.isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
@@ -133,7 +150,7 @@ fun LoginScreen(onLogin: () -> Unit) {
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
-                        if (isLoading) {
+                        if (viewModel.isLoading) {
                             CircularProgressIndicator(
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(24.dp)
@@ -143,6 +160,11 @@ fun LoginScreen(onLogin: () -> Unit) {
                         }
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            TextButton(onClick = onNavigateToSignUp) {
+                Text("¿No tienes cuenta? Regístrate")
             }
         }
     }
