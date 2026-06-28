@@ -45,7 +45,10 @@ fun MainScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToSignUp: () -> Unit,
     onNavigateToSearch: () -> Unit,
-    onNavigateToIDVerification: () -> Unit
+    onNavigateToIDVerification: () -> Unit,
+    onNavigateToCarManagement: () -> Unit,
+    onNavigateToRentalManagement: () -> Unit,
+    onNavigateToReviewSelection: () -> Unit
 ) {
     val activity = LocalContext.current as ComponentActivity
     val vehicleViewModel: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
@@ -129,7 +132,10 @@ fun MainScreen(
                     onNavigateToUserReview = { onNavigateToUserReview(2L) },
                     onNavigateToFavorites = onNavigateToFavorites,
                     onNavigateToSignUp = onNavigateToSignUp,
-                    onNavigateToIDVerification = onNavigateToIDVerification
+                    onNavigateToIDVerification = onNavigateToIDVerification,
+                    onNavigateToCarManagement = onNavigateToCarManagement,
+                    onNavigateToRentalManagement = onNavigateToRentalManagement,
+                    onNavigateToReviewSelection = onNavigateToReviewSelection
                 )
             }
         }

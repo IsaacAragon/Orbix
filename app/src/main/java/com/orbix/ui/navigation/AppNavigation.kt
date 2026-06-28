@@ -32,6 +32,7 @@ import com.orbix.ui.screen.HostDashboardScreen
 import com.orbix.ui.screen.CarManagementScreen
 import com.orbix.ui.screen.HostRulesScreen
 import com.orbix.ui.screen.RentalManagementScreen
+import com.orbix.ui.screen.ReviewSelectionScreen
 import com.orbix.ui.viewmodel.SessionState
 import com.orbix.ui.viewmodel.SessionViewModel
 
@@ -106,7 +107,10 @@ fun AppNavigation() {
                         onNavigateToFavorites = { navController.navigate(Favorites) },
                         onNavigateToSignUp = { navController.navigate(SignUp) },
                         onNavigateToIDVerification = { navController.navigate(IDVerification) },
-                        onNavigateToSearch = { navController.navigate(Search) }
+                        onNavigateToSearch = { navController.navigate(Search) },
+                        onNavigateToCarManagement = { navController.navigate(CarManagement) },
+                        onNavigateToRentalManagement = { navController.navigate(RentalManagement) },
+                        onNavigateToReviewSelection = { navController.navigate(ReviewSelection) }
                     )
                 }
 
@@ -240,6 +244,17 @@ fun AppNavigation() {
                 composable<HostRules> {
                     HostRulesScreen(
                         onBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable<ReviewSelection> {
+                    ReviewSelectionScreen(
+                        onNavigateToCarReview = {
+                            navController.navigate(CarReview(2L))
+                        },
+                        onNavigateToUserReview = {
+                            navController.navigate(UserReview(2L))
+                        }
                     )
                 }
             }
