@@ -31,7 +31,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.AssistChip
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -55,7 +55,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -638,14 +638,6 @@ fun VehicleCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 0.5.sp
                     )
-
-                    vehicle.category?.let { category ->
-                        Spacer(modifier = Modifier.height(8.dp))
-                        AssistChip(
-                            onClick = {},
-                            label = { Text(category.label()) }
-                        )
-                    }
                 }
 
                 Surface(
@@ -690,16 +682,6 @@ fun VehicleCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = vehicle.description ?: "Sin descripción",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Imagen
@@ -742,6 +724,19 @@ fun VehicleCard(
                         .padding(vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
+
+                    vehicle.category?.let { category ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Tipo",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                            Text(
+                                text = category.label(),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
