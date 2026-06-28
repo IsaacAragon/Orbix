@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,9 +41,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +61,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -101,6 +106,10 @@ fun CarDetailScreen(
     val canRent = canReview && vehicle?.isAvailable == true && !hasRented
 
     val scrollState = rememberScrollState()
+
+    var showRentDaysDialog by remember { mutableStateOf(false) }
+    var rentDaysText by remember { mutableStateOf("") }
+    var rentDaysError by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -481,7 +490,7 @@ fun CarDetailScreen(
                         }
                         canRent -> {
                             Button(
-                                onClick = { hasRented = true },
+                                onClick = { showRentDaysDialog = true },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -498,7 +507,7 @@ fun CarDetailScreen(
                         }
                         else -> {
                             Button(
-                                onClick = { },
+                                onClick = { showRentDaysDialog = true },
                                 enabled = vehicle?.isAvailable != false,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = WhatsappGreen,
@@ -526,6 +535,100 @@ fun CarDetailScreen(
                         }
                     }
                 }
+            }
+
+            if (showRentDaysDialog) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showRentDaysDialog = false
+                        rentDaysText = ""
+                        rentDaysError = null
+                    },
+                    shape = RoundedCornerShape(24.dp),
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Today,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    },
+                    title = {
+                        Text(
+                            text = "Días de renta",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "¿Cuántos días deseas rentar este vehículo?",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            OutlinedTextField(
+                                value = rentDaysText,
+                                onValueChange = { newValue ->
+                                    if (newValue.all { it.isDigit() }) {
+                                        rentDaysText = newValue
+                                        rentDaysError = null
+                                    }
+                                },
+                                label = { Text("Número de días") },
+                                placeholder = { Text("Ej. 3") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                isError = rentDaysError != null,
+                                supportingText = {
+                                    if (rentDaysError != null) {
+                                        Text(
+                                            text = rentDaysError ?: "",
+                                            color = MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                val days = rentDaysText.toIntOrNull()
+                                if (days == null || days <= 0) {
+                                    rentDaysError = "Por favor, ingresa un número de días válido."
+                                } else {
+                                    // TODO: En el futuro guardar en la base de datos y redirigir a WhatsApp
+                                    if (canRent) {
+                                        hasRented = true
+                                    }
+                                    showRentDaysDialog = false
+                                    rentDaysText = ""
+                                    rentDaysError = null
+                                }
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Confirmar")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                showRentDaysDialog = false
+                                rentDaysText = ""
+                                rentDaysError = null
+                            }
+                        ) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
             }
         }
     }

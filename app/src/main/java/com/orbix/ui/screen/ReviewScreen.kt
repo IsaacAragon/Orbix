@@ -1,5 +1,13 @@
 package com.orbix.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,6 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -102,6 +111,18 @@ fun UserReviewScreen(
     var comment by remember { mutableStateOf("") }
     var selectedTags by remember { mutableStateOf(setOf<ReviewTag>()) }
     val scrollState = rememberScrollState()
+
+    val filteredTags = remember(rating) {
+        when {
+            rating >= 4 -> userReviewTags
+            rating == 3 -> userReviewTags.filter { it != ReviewTag.RECOMENDADO && it != ReviewTag.ANFITRION_AMABLE && it != ReviewTag.RESPETUOSO }
+            else -> emptyList()
+        }
+    }
+
+    LaunchedEffect(rating) {
+        selectedTags = selectedTags.intersect(filteredTags.toSet())
+    }
 
     Scaffold(
         topBar = {
@@ -196,7 +217,7 @@ fun UserReviewScreen(
                 ReviewFormCard(
                     rating = rating,
                     onRatingChange = { rating = it },
-                    availableTags = userReviewTags,
+                    availableTags = filteredTags,
                     selectedTags = selectedTags,
                     onTagToggled = { tag ->
                         selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
@@ -261,12 +282,29 @@ private fun ReviewFormScreen(
     var rating by remember { mutableStateOf(0) }
     var comment by remember { mutableStateOf("") }
     var selectedTags by remember { mutableStateOf(setOf<ReviewTag>()) }
+    val scrollState = rememberScrollState()
+
+    val filteredTags = remember(rating, availableTags) {
+        when {
+            rating >= 4 -> availableTags
+            rating == 3 -> availableTags.filter { it != ReviewTag.RECOMENDADO && it != ReviewTag.ANFITRION_AMABLE && it != ReviewTag.RESPETUOSO }
+            else -> emptyList()
+        }
+    }
+
+    LaunchedEffect(rating) {
+        selectedTags = selectedTags.intersect(filteredTags.toSet())
+    }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text("Reseña", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Reseña",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -284,75 +322,96 @@ private fun ReviewFormScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                ReviewFormCard(
+                    rating = rating,
+                    onRatingChange = {
+                        rating = it
+                        onClearError()
+                    },
+                    availableTags = filteredTags,
+                    selectedTags = selectedTags,
+                    onTagToggled = { tag ->
+                        selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
+                        onClearError()
+                    },
+                    comment = comment,
+                    onCommentChange = {
+                        comment = it
+                        onClearError()
+                    },
+                    errorMessage = errorMessage
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
 
             Box(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            ReviewFormCard(
-                rating = rating,
-                onRatingChange = {
-                    rating = it
-                    onClearError()
-                },
-                availableTags = availableTags,
-                selectedTags = selectedTags,
-                onTagToggled = { tag ->
-                    selectedTags = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
-                    onClearError()
-                },
-                comment = comment,
-                onCommentChange = {
-                    comment = it
-                    onClearError()
-                },
-                errorMessage = errorMessage
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = { onSubmit(rating, selectedTags.toList(), comment) },
-                modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                enabled = rating > 0 && !isSubmitting
+                    .padding(horizontal = 24.dp, vertical = 24.dp)
             ) {
-                if (isSubmitting) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text(buttonText, fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = { onSubmit(rating, selectedTags.toList(), comment) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = rating > 0 && !isSubmitting
+                ) {
+                    if (isSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text(buttonText, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -379,7 +438,9 @@ private fun ReviewFormCard(
         )
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -390,65 +451,87 @@ private fun ReviewFormCard(
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.Center) {
                 repeat(5) { index ->
-                    IconButton(onClick = { onRatingChange(index + 1) }, modifier = Modifier.size(48.dp)) {
+                    val isSelected = index < rating
+                    val scale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.25f else 1.0f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        label = "star_scale"
+                    )
+                    IconButton(
+                        onClick = { onRatingChange(index + 1) },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .graphicsLayer(scaleX = scale, scaleY = scale)
+                    ) {
                         Icon(
-                            imageVector = if (index < rating) Icons.Default.Star else Icons.Outlined.StarBorder,
+                            imageVector = if (isSelected) Icons.Default.Star else Icons.Outlined.StarBorder,
                             contentDescription = null,
-                            tint = if (index < rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                             modifier = Modifier.size(36.dp)
                         )
                     }
                 }
             }
 
-            if (rating > 0) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "Selecciona tags (opcional)",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    availableTags.forEach { tag ->
-                        val isSelected = tag in selectedTags
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = { onTagToggled(tag) },
-                            label = { Text(tag.label()) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true,
-                                selected = isSelected,
-                                borderColor = MaterialTheme.colorScheme.outlineVariant,
-                                selectedBorderColor = Color.Transparent
-                            )
+            AnimatedVisibility(
+                visible = rating > 0,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (availableTags.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "Selecciona tags (opcional)",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.fillMaxWidth()
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            availableTags.forEach { tag ->
+                                val isSelected = tag in selectedTags
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { onTagToggled(tag) },
+                                    label = { Text(tag.label()) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    ),
+                                    border = FilterChipDefaults.filterChipBorder(
+                                        enabled = true,
+                                        selected = isSelected,
+                                        borderColor = MaterialTheme.colorScheme.outlineVariant,
+                                        selectedBorderColor = Color.Transparent
+                                    )
+                                )
+                            }
+                        }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = comment,
+                        onValueChange = onCommentChange,
+                        label = { Text("Comentario (opcional)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    )
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedTextField(
-                value = comment,
-                onValueChange = onCommentChange,
-                label = { Text("Comentario (opcional)") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                )
-            )
 
             errorMessage?.let { error ->
                 Spacer(modifier = Modifier.height(8.dp))
