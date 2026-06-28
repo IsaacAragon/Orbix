@@ -3,7 +3,7 @@ package com.orbix.ui.repository
 import com.orbix.ui.local.TokenStorage
 import com.orbix.ui.model.AllReviewTagsResponse
 import com.orbix.ui.model.CreateUserReviewRequest
-import com.orbix.ui.model.CreateVehicleReviewRequest
+import com.orbix.ui.model.CreateVehicleReviewBody
 import com.orbix.ui.model.UserReviewResponse
 import com.orbix.ui.model.UserReviewSummary
 import com.orbix.ui.model.VehicleReviewResponse
@@ -46,7 +46,12 @@ class ReviewRepository(
             ensureAuthHeader()
             ApiResult.Success(
                 ApiClient.reviewApi.createVehicleReview(
-                    CreateVehicleReviewRequest(vehicleId, rating, tags, comment?.ifBlank { null })
+                    vehiculoId = vehicleId,
+                    body = CreateVehicleReviewBody(
+                        rating = rating,
+                        tags = tags,
+                        comment = comment?.ifBlank { null }
+                    )
                 )
             )
         } catch (e: HttpException) {
