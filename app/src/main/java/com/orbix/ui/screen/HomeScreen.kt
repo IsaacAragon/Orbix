@@ -36,6 +36,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,6 +45,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,6 +72,7 @@ import com.orbix.ui.model.label
 import com.orbix.ui.util.Permissions
 import com.orbix.ui.viewmodel.VehicleViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     userPermissions: Set<String>,
@@ -101,50 +104,57 @@ fun HomeScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        LazyColumn(
+        PullToRefreshBox(
+            isRefreshing = vm.isRefreshing,
+            onRefresh = { vm.loadVehicles() },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            item { HomeHeader() }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                item { HomeHeader() }
 
-            item { HomeSearchBar(onSearchClick = onNavigateToSearch) }
+                item { HomeSearchBar(onSearchClick = onNavigateToSearch) }
 
-            item {
-                HomeCategories(
-                    selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it }
-                )
+                item {
+                    HomeCategories(
+                        selectedCategory = selectedCategory,
+                        onCategorySelected = { selectedCategory = it }
+                    )
+                }
+
+                item {
+                    Text(
+                        text = "Disponibles cerca de ti",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                /*items(5) { index ->
+                    CarCard(
+                        carId = (index + 1).toString(),
+                        onNavigateToCarDetail = onNavigateToCarDetail
+                    )
+                }*/
+
+                items(filteredVehicles.size) { index ->
+                    val vehicle = filteredVehicles[index]
+
+                    VehicleCard(
+                        vehicle = vehicle,
+                        onNavigateToCarDetail = onNavigateToCarDetail
+                    )
+                }
+
+                item { Spacer(modifier = Modifier.height(24.dp)) }
             }
-
-            item {
-                Text(
-                    text = "Disponibles cerca de ti",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-
-            /*items(5) { index ->
-                CarCard(
-                    carId = (index + 1).toString(),
-                    onNavigateToCarDetail = onNavigateToCarDetail
-                )
-            }*/
-
-            items(filteredVehicles.size) { index ->
-                val vehicle = filteredVehicles[index]
-
-                VehicleCard(
-                    vehicle = vehicle,
-                    onNavigateToCarDetail = onNavigateToCarDetail
-                )
-            }
-
-            item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
 }

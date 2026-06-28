@@ -1,5 +1,6 @@
 package com.orbix.ui.screen
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -22,9 +23,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 import com.orbix.ui.navigation.NavItem
+import com.orbix.ui.viewmodel.VehicleViewModel
 
 @Composable
 fun MainScreen(
@@ -41,6 +46,9 @@ fun MainScreen(
     onNavigateToSearch: () -> Unit,
     onNavigateToIDVerification: () -> Unit
 ) {
+    val activity = LocalContext.current as ComponentActivity
+    val vehicleViewModel: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
+
     val navItems = listOf(
         NavItem("Inicio", Icons.Default.Home, 0),
         NavItem("Reservas", Icons.Default.DateRange, 1),
@@ -60,7 +68,13 @@ fun MainScreen(
                 navItems.forEach { item ->
                     NavigationBarItem(
                         selected = selectedItem == item.index,
-                        onClick = { selectedItem = item.index },
+                        onClick = {
+                            if (selectedItem == 0 && item.index == 0) {
+                                vehicleViewModel.loadVehicles()
+                            } else {
+                                selectedItem = item.index
+                            }
+                        },
                         label = { 
                             Text(
                                 text = item.label,
