@@ -5,6 +5,7 @@ import com.orbix.ui.model.AuthResponse
 import com.orbix.ui.model.LoginRequest
 import com.orbix.ui.model.RegisterRequest
 import com.orbix.ui.service.ApiClient
+import com.orbix.ui.util.parseApiError
 import retrofit2.HttpException
 
 sealed class AuthResult {
@@ -28,27 +29,34 @@ class AuthRepository(
             AuthResult.Success(response)
         } catch (e: HttpException) {
             when (e.code()) {
-                401 -> AuthResult.Error("Credenciales inválidas")
-                403 -> AuthResult.Error("No tienes permiso para acceder")
-                else -> AuthResult.Error("Error del servidor")
+                401 -> AuthResult.Error(parseApiError(e, "Credenciales inválidas"))
+                403 -> AuthResult.Error(parseApiError(e, "No tienes permiso para acceder"))
+                else -> AuthResult.Error(parseApiError(e))
             }
         } catch (e: Exception) {
             AuthResult.Error("Error de conexión. Verifica que el backend esté activo.")
         }
     }
 
-    suspend fun register(email: String, password: String, nombre: String): AuthResult {
+    suspend fun register(
+        email: String,
+        password: String,
+        nombre: String?,
+        fechaNacimiento: String?
+    ): AuthResult {
         return try {
             val response = ApiClient.authApi.register(
-                RegisterRequest(email = email, password = password, nombre = nombre)
+                RegisterRequest(
+                    email = email.trim(),
+                    password = password,
+                    nombre = nombre?.trim()?.takeIf { it.isNotBlank() },
+                    fechaNacimiento = fechaNacimiento
+                )
             )
             saveSession(response)
             AuthResult.Success(response)
         } catch (e: HttpException) {
-            when (e.code()) {
-                400 -> AuthResult.Error("Datos inválidos o el correo ya está registrado")
-                else -> AuthResult.Error("Error del servidor")
-            }
+            AuthResult.Error(parseApiError(e, "No se pudo crear la cuenta"))
         } catch (e: Exception) {
             AuthResult.Error("Error de conexión. Verifica que el backend esté activo.")
         }

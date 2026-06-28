@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.orbix.ui.local.TokenStorage
 import com.orbix.ui.repository.AuthRepository
 import com.orbix.ui.repository.AuthResult
+import com.orbix.ui.util.validateRegister
 import kotlinx.coroutines.launch
 
 class SignUpViewModel(application: Application) : AndroidViewModel(application) {
@@ -21,9 +22,16 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    fun register(nombre: String, email: String, password: String, onSuccess: () -> Unit) {
-        if (nombre.isBlank() || email.isBlank() || password.isBlank()) {
-            errorMessage = "Completa todos los campos"
+    fun register(
+        nombre: String,
+        email: String,
+        password: String,
+        confirmPassword: String,
+        fechaNacimiento: String?,
+        onSuccess: () -> Unit
+    ) {
+        validateRegister(email, password, confirmPassword, fechaNacimiento)?.let {
+            errorMessage = it
             return
         }
 
@@ -31,7 +39,14 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
             isLoading = true
             errorMessage = null
 
-            when (val result = authRepository.register(email, password, nombre)) {
+            when (
+                val result = authRepository.register(
+                    email = email,
+                    password = password,
+                    nombre = nombre,
+                    fechaNacimiento = fechaNacimiento
+                )
+            ) {
                 is AuthResult.Success -> onSuccess()
                 is AuthResult.Error -> errorMessage = result.message
             }
