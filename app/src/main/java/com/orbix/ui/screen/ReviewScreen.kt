@@ -61,15 +61,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+
+import coil.compose.AsyncImage
+
 import com.orbix.ui.model.ReviewTag
 import com.orbix.ui.model.label
 import com.orbix.ui.model.userReviewTags
 import com.orbix.ui.model.vehicleReviewTags
 import com.orbix.ui.viewmodel.ReviewViewModel
+import com.orbix.ui.viewmodel.VehicleViewModel
 
 @Composable
 fun CarReviewScreen(
@@ -78,10 +83,16 @@ fun CarReviewScreen(
     onReviewSubmitted: () -> Unit,
     viewModel: ReviewViewModel = viewModel()
 ) {
+    val activity = androidx.compose.ui.platform.LocalContext.current as? androidx.activity.ComponentActivity
+    val vehicleViewModel: VehicleViewModel? = activity?.let { viewModel(viewModelStoreOwner = it) }
+    val vehicle = vehicleViewModel?.vehicles?.find { it.id == vehicleId }
+    val imageUrl = vehicle?.imageUrl
+
     ReviewFormScreen(
         title = "Califica el Vehículo",
-        subtitle = "¡Cuéntanos cómo fue tu experiencia con el auto!",
+        subtitle = if (vehicle != null) "¡Cuéntanos cómo fue tu experiencia con el ${vehicle.brand} ${vehicle.model}!" else "¡Cuéntanos cómo fue tu experiencia con el auto!",
         icon = Icons.Default.DirectionsCar,
+        imageUrl = imageUrl,
         buttonText = "Enviar Reseña del Auto",
         availableTags = vehicleReviewTags,
         isSubmitting = viewModel.isSubmitting,
@@ -271,6 +282,7 @@ private fun ReviewFormScreen(
     title: String,
     subtitle: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    imageUrl: String? = null,
     buttonText: String,
     availableTags: List<ReviewTag>,
     isSubmitting: Boolean,
@@ -340,12 +352,21 @@ private fun ReviewFormScreen(
                         .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    if (!imageUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = title,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
