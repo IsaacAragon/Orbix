@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Logout
@@ -58,7 +60,10 @@ fun ProfileScreen(
     onNavigateToUserReview: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToSignUp: () -> Unit,
-    onNavigateToIDVerification: () -> Unit
+    onNavigateToIDVerification: () -> Unit,
+    onNavigateToCarManagement: () -> Unit,
+    onNavigateToRentalManagement: () -> Unit,
+    onNavigateToReviewSelection: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -126,11 +131,49 @@ fun ProfileScreen(
                 )
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
-                    Text(
-                        text = "Configuración",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Configuración",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (Roles.isCliente(userRoles) || Roles.isArrendador(userRoles)) {
+                                IconButton(onClick = onNavigateToReviewSelection) {
+                                    Icon(
+                                        imageVector = Icons.Default.Star,
+                                        contentDescription = "Seleccionar Reseña",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                            if (Roles.isArrendador(userRoles)) {
+                                IconButton(onClick = onNavigateToCarManagement) {
+                                    Icon(
+                                        imageVector = Icons.Default.DirectionsCar,
+                                        contentDescription = "Gestionar Vehículos",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                            if (Roles.isArrendador(userRoles)) {
+                                IconButton(onClick = onNavigateToRentalManagement) {
+                                    Icon(
+                                        imageVector = Icons.Default.DateRange,
+                                        contentDescription = "Gestionar Reservas",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
 
                     TextButton(

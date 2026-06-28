@@ -52,3 +52,6 @@ object RentalManagement
 
 @Serializable
 object HostRules
+
+@Serializable
+object ReviewSelection
