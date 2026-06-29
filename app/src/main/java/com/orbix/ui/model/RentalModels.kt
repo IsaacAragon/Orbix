@@ -36,3 +36,23 @@ data class RentalResponse(
     val canReviewCliente: Boolean = false,
     val clienteAlreadyReviewed: Boolean = false
 )
+
+data class CreateExtensionRequest(
+    val diasExtension: Int
+)
+
+data class ExtensionResponse(
+    val id: Long,
+    val rentaId: Long,
+    val diasExtension: Int,
+    val estado: RentalStatus,
+    val fechaSolicitud: String,
+    val nuevaFechaFin: String,
+    val costoAdicional: Double,
+    val vehicleBrand: String,
+    val vehicleModel: String,
+    val vehicleImageUrl: String?,
+    val clienteNombre: String?,
+    val clienteEmail: String
+)
+

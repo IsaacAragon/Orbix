@@ -39,6 +39,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -101,6 +106,8 @@ private fun RentalManagementContent(
     onNavigateToUserReview: (Long, String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var selectedRentalForExtensions by remember { mutableStateOf<RentalResponse?>(null) }
+
     when {
         viewModel.isLoading -> {
             Box(
@@ -139,12 +146,22 @@ private fun RentalManagementContent(
                         onReject = { viewModel.rejectRequest(rental.id) },
                         onReviewCliente = {
                             onNavigateToUserReview(rental.clienteId, rental.clienteNombre)
-                        }
+                        },
+                        onShowExtensions = { selectedRentalForExtensions = rental }
                     )
                 }
                 item { Spacer(modifier = Modifier.height(24.dp)) }
             }
         }
+    }
+
+    selectedRentalForExtensions?.let { rental ->
+        RentalExtensionsDialog(
+            rental = rental,
+            isHost = true,
+            viewModel = viewModel,
+            onDismiss = { selectedRentalForExtensions = null }
+        )
     }
 }
 
@@ -154,7 +171,8 @@ private fun HostRentalCard(
     isSubmitting: Boolean,
     onApprove: () -> Unit,
     onReject: () -> Unit,
-    onReviewCliente: () -> Unit
+    onReviewCliente: () -> Unit,
+    onShowExtensions: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -310,20 +328,48 @@ private fun HostRentalCard(
                     }
                 }
 
-                if (rental.canReviewCliente || rental.clienteAlreadyReviewed) {
+                if (rental.estado == RentalStatus.APROBADA) {
                     Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = onReviewCliente,
-                        enabled = rental.canReviewCliente && !isSubmitting,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Star, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (rental.clienteAlreadyReviewed) "Ya calificaste" else "Calificar cliente",
-                            fontWeight = FontWeight.Bold
-                        )
+                    val hasReview = rental.canReviewCliente || rental.clienteAlreadyReviewed
+                    if (hasReview) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Button(
+                                onClick = onShowExtensions,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Schedule, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Extensiones", fontWeight = FontWeight.Bold)
+                            }
+
+                            OutlinedButton(
+                                onClick = onReviewCliente,
+                                enabled = rental.canReviewCliente && !isSubmitting,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Star, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (rental.clienteAlreadyReviewed) "Calificado" else "Calificar",
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    } else {
+                        Button(
+                            onClick = onShowExtensions,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Schedule, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Extensiones", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

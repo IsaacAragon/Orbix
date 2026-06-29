@@ -2,6 +2,8 @@ package com.orbix.ui.service
 
 import com.orbix.ui.model.CreateRentalRequest
 import com.orbix.ui.model.RentalResponse
+import com.orbix.ui.model.CreateExtensionRequest
+import com.orbix.ui.model.ExtensionResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
@@ -23,4 +25,26 @@ interface RentalApi {
 
     @PATCH("rentals/{id}/reject")
     suspend fun reject(@Path("id") id: Long): RentalResponse
+
+    @POST("rentals/{rentalId}/extensions")
+    suspend fun createExtension(
+        @Path("rentalId") rentalId: Long,
+        @Body body: CreateExtensionRequest
+    ): ExtensionResponse
+
+    @PATCH("rentals/extensions/{extensionId}/approve")
+    suspend fun approveExtension(@Path("extensionId") extensionId: Long): ExtensionResponse
+
+    @PATCH("rentals/extensions/{extensionId}/reject")
+    suspend fun rejectExtension(@Path("extensionId") extensionId: Long): ExtensionResponse
+
+    @GET("rentals/{rentalId}/extensions")
+    suspend fun getExtensionsForRental(@Path("rentalId") rentalId: Long): List<ExtensionResponse>
+
+    @GET("rentals/extensions/mine")
+    suspend fun getMyExtensions(): List<ExtensionResponse>
+
+    @GET("rentals/extensions/received")
+    suspend fun getReceivedExtensions(): List<ExtensionResponse>
 }
+

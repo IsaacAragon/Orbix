@@ -37,6 +37,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,6 +68,7 @@ fun ReservationsScreen(
     viewModel: RentalViewModel = viewModel()
 ) {
     val isCliente = Roles.isCliente(userRoles)
+    var selectedRentalForExtensions by remember { mutableStateOf<RentalResponse?>(null) }
 
     LaunchedEffect(isCliente) {
         if (isCliente) {
@@ -148,7 +155,8 @@ fun ReservationsScreen(
                     items(viewModel.myRentals, key = { it.id }) { rental ->
                         ClientRentalCard(
                             rental = rental,
-                            onReview = { onNavigateToCarReview(rental.vehicleId) }
+                            onReview = { onNavigateToCarReview(rental.vehicleId) },
+                            onShowExtensions = { selectedRentalForExtensions = rental }
                         )
                     }
                     item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -161,13 +169,23 @@ fun ReservationsScreen(
                 // Error visible on next load attempt; could use SnackbarHost if added later
             }
         }
+
+        selectedRentalForExtensions?.let { rental ->
+            RentalExtensionsDialog(
+                rental = rental,
+                isHost = false,
+                viewModel = viewModel,
+                onDismiss = { selectedRentalForExtensions = null }
+            )
+        }
     }
 }
 
 @Composable
 private fun ClientRentalCard(
     rental: RentalResponse,
-    onReview: () -> Unit
+    onReview: () -> Unit,
+    onShowExtensions: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -289,14 +307,29 @@ private fun ClientRentalCard(
 
                 if (rental.estado == RentalStatus.APROBADA) {
                     Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = onReview,
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(Icons.Default.Star, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Reseñar este auto", fontWeight = FontWeight.Bold)
+                        Button(
+                            onClick = onReview,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Star, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Calificar", fontWeight = FontWeight.Bold)
+                        }
+
+                        OutlinedButton(
+                            onClick = onShowExtensions,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Schedule, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Extensiones", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

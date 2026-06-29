@@ -2,6 +2,8 @@ package com.orbix.ui.repository
 
 import com.orbix.ui.model.CreateRentalRequest
 import com.orbix.ui.model.RentalResponse
+import com.orbix.ui.model.CreateExtensionRequest
+import com.orbix.ui.model.ExtensionResponse
 import com.orbix.ui.service.ApiClient
 import com.orbix.ui.service.ApiResult
 import com.orbix.ui.util.parseApiError
@@ -107,6 +109,78 @@ class RentalRepository {
             authError(e)
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error al rechazar solicitud")
+        }
+    }
+
+    suspend fun createExtension(rentalId: Long, diasExtension: Int): ApiResult<ExtensionResponse> {
+        return try {
+            ensureAuthHeader()
+            ApiResult.Success(
+                ApiClient.rentalApi.createExtension(
+                    rentalId, CreateExtensionRequest(diasExtension)
+                )
+            )
+        } catch (e: HttpException) {
+            when (e.code()) {
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
+                403 -> ApiResult.Error(parseApiError(e, "No tienes permiso para solicitar esta extensión."))
+                400 -> ApiResult.Error(parseApiError(e, "Datos inválidos para la extensión."))
+                else -> ApiResult.Error(parseApiError(e))
+            }
+        } catch (e: IllegalStateException) {
+            ApiResult.Error(e.message ?: "Sesión expirada. Inicia sesión de nuevo.")
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error de conexión")
+        }
+    }
+
+    suspend fun getExtensionsForRental(rentalId: Long): ApiResult<List<ExtensionResponse>> {
+        return try {
+            ensureAuthHeader()
+            ApiResult.Success(ApiClient.rentalApi.getExtensionsForRental(rentalId))
+        } catch (e: HttpException) {
+            when (e.code()) {
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
+                else -> ApiResult.Error(parseApiError(e))
+            }
+        } catch (e: IllegalStateException) {
+            authError(e)
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error al cargar las extensiones")
+        }
+    }
+
+    suspend fun approveExtension(extensionId: Long): ApiResult<ExtensionResponse> {
+        return try {
+            ensureAuthHeader()
+            ApiResult.Success(ApiClient.rentalApi.approveExtension(extensionId))
+        } catch (e: HttpException) {
+            when (e.code()) {
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
+                400, 403 -> ApiResult.Error(parseApiError(e))
+                else -> ApiResult.Error(parseApiError(e))
+            }
+        } catch (e: IllegalStateException) {
+            authError(e)
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error al aprobar la extensión")
+        }
+    }
+
+    suspend fun rejectExtension(extensionId: Long): ApiResult<ExtensionResponse> {
+        return try {
+            ensureAuthHeader()
+            ApiResult.Success(ApiClient.rentalApi.rejectExtension(extensionId))
+        } catch (e: HttpException) {
+            when (e.code()) {
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
+                400, 403 -> ApiResult.Error(parseApiError(e))
+                else -> ApiResult.Error(parseApiError(e))
+            }
+        } catch (e: IllegalStateException) {
+            authError(e)
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error al rechazar la extensión")
         }
     }
 }
