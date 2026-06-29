@@ -60,4 +60,48 @@ class VehicleRepository {
             ApiResult.Error(e.message ?: "Error de conexión")
         }
     }
+
+    suspend fun getFavorites(): ApiResult<List<Vehicle>> {
+        return try {
+            ApiResult.Success(ApiClient.vehicleApi.getFavorites())
+        } catch (e: HttpException) {
+            when (e.code()) {
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
+                403 -> ApiResult.Error("No tienes permiso para ver favoritos.")
+                else -> ApiResult.Error("Error del servidor")
+            }
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error de conexión")
+        }
+    }
+
+    suspend fun addFavorite(vehicleId: Long): ApiResult<Unit> {
+        return try {
+            ApiClient.vehicleApi.addFavorite(vehicleId)
+            ApiResult.Success(Unit)
+        } catch (e: HttpException) {
+            when (e.code()) {
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
+                403 -> ApiResult.Error("No tienes permiso para agregar a favoritos.")
+                else -> ApiResult.Error("Error del servidor")
+            }
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error de conexión")
+        }
+    }
+
+    suspend fun removeFavorite(vehicleId: Long): ApiResult<Unit> {
+        return try {
+            ApiClient.vehicleApi.removeFavorite(vehicleId)
+            ApiResult.Success(Unit)
+        } catch (e: HttpException) {
+            when (e.code()) {
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
+                403 -> ApiResult.Error("No tienes permiso para remover de favoritos.")
+                else -> ApiResult.Error("Error del servidor")
+            }
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error de conexión")
+        }
+    }
 }

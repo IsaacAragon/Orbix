@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -163,7 +164,8 @@ fun HomeScreen(
 
                     VehicleCard(
                         vehicle = vehicle,
-                        onNavigateToCarDetail = onNavigateToCarDetail
+                        onNavigateToCarDetail = onNavigateToCarDetail,
+                        onToggleFavorite = { vm.toggleFavorite(it) }
                     )
                 }
 
@@ -624,7 +626,8 @@ fun VehicleCard(
 @Composable
 fun VehicleCard(
     vehicle: Vehicle,
-    onNavigateToCarDetail: (String) -> Unit
+    onNavigateToCarDetail: (String) -> Unit,
+    onToggleFavorite: ((Vehicle) -> Unit)? = null
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -732,6 +735,27 @@ fun VehicleCard(
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
+                }
+
+                if (onToggleFavorite != null) {
+                    IconButton(
+                        onClick = { onToggleFavorite(vehicle) },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                                shape = CircleShape
+                            )
+                            .size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (vehicle.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Favorito",
+                            tint = if (vehicle.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 

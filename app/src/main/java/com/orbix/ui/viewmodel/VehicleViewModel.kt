@@ -19,11 +19,16 @@ class VehicleViewModel : ViewModel() {
         listOf<Vehicle>()
     )
 
+    var favoriteVehicles by mutableStateOf(
+        listOf<Vehicle>()
+    )
+
     var isRefreshing by mutableStateOf(false)
         private set
 
     init {
         loadVehicles()
+        loadFavorites()
     }
 
     fun loadVehicles() {
@@ -35,6 +40,56 @@ class VehicleViewModel : ViewModel() {
                 is ApiResult.Error -> {}
             }
             isRefreshing = false
+        }
+    }
+
+    fun loadFavorites() {
+        viewModelScope.launch {
+            when (val result = repository.getFavorites()) {
+                is ApiResult.Success -> favoriteVehicles = result.data
+                is ApiResult.Error -> {}
+            }
+        }
+    }
+
+    fun toggleFavorite(vehicle: Vehicle) {
+        viewModelScope.launch {
+            val id = vehicle.id ?: return@launch
+            val wasFavorite = vehicle.isFavorite
+
+            // Optimistic update for vehicles list
+            vehicles = vehicles.map {
+                if (it.id == id) it.copy(isFavorite = !wasFavorite) else it
+            }
+
+            // Optimistic update for favoriteVehicles list
+            if (wasFavorite) {
+                favoriteVehicles = favoriteVehicles.filter { it.id != id }
+            } else {
+                if (favoriteVehicles.none { it.id == id }) {
+                    favoriteVehicles = favoriteVehicles + vehicle.copy(isFavorite = true)
+                }
+            }
+
+            val result = if (wasFavorite) {
+                repository.removeFavorite(id)
+            } else {
+                repository.addFavorite(id)
+            }
+
+            if (result is ApiResult.Error) {
+                // Revert on error
+                vehicles = vehicles.map {
+                    if (it.id == id) it.copy(isFavorite = wasFavorite) else it
+                }
+                if (wasFavorite) {
+                    if (favoriteVehicles.none { it.id == id }) {
+                        favoriteVehicles = favoriteVehicles + vehicle.copy(isFavorite = true)
+                    }
+                } else {
+                    favoriteVehicles = favoriteVehicles.filter { it.id != id }
+                }
+            }
         }
     }
 }
