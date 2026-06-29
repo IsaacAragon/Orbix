@@ -18,8 +18,8 @@ fun validateRegister(
     if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
         return "El correo no es válido"
     }
-    if (isArrendadorEmail(email) && telefono.isNullOrBlank()) {
-        return "El teléfono es obligatorio para arrendadores"
+    if (telefono.isNullOrBlank()) {
+        return "El teléfono es obligatorio"
     }
     if (password.length < 6) {
         return "La contraseña debe tener al menos 6 caracteres y contener al menos una letra"

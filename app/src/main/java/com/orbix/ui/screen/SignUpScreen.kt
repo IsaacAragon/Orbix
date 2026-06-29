@@ -97,11 +97,11 @@ fun SignUpScreen(
 
     val isFormValid = fullName.isNotBlank() &&
             email.isNotBlank() &&
+            telefono.isNotBlank() &&
             birthDateApi != null &&
             password.isNotBlank() &&
             confirmPassword.isNotBlank() &&
-            password == confirmPassword &&
-            (!isArrendador || telefono.isNotBlank())
+            password == confirmPassword
 
     Scaffold(
         topBar = {
@@ -185,21 +185,21 @@ fun SignUpScreen(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 4.dp)
                 )
-
-                OutlinedTextField(
-                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
-                    value = telefono,
-                    onValueChange = {
-                        telefono = it
-                        viewModel.clearError()
-                    },
-                    label = { Text("Teléfono") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
-                )
             }
+
+            OutlinedTextField(
+                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                value = telefono,
+                onValueChange = {
+                    telefono = it
+                    viewModel.clearError()
+                },
+                label = { Text("Teléfono") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
+            )
 
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
