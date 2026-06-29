@@ -58,7 +58,7 @@ import java.util.Calendar
 @Composable
 fun SignUpScreen(
     onBack: () -> Unit,
-    onRegisterSuccess: () -> Unit,
+    onRegisterSuccess: (com.orbix.ui.model.AuthResponse) -> Unit,
     viewModel: SignUpViewModel = viewModel()
 ) {
     var fullName by remember { mutableStateOf("") }

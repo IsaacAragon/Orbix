@@ -6,10 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.orbix.ui.local.TokenStorage
-import com.orbix.ui.repository.AuthRepository
+import com.orbix.OrbixApplication
 import com.orbix.ui.model.AuthResponse
+import com.orbix.ui.repository.AuthRepository
 import com.orbix.ui.repository.UserSession
+import com.orbix.ui.service.ApiClient
 import kotlinx.coroutines.launch
 
 sealed class SessionState {
@@ -20,7 +21,8 @@ sealed class SessionState {
 
 class SessionViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val authRepository = AuthRepository(TokenStorage(application))
+    private val authRepository: AuthRepository =
+        (application as OrbixApplication).authRepository
 
     var sessionState by mutableStateOf<SessionState>(SessionState.Loading)
         private set
@@ -46,6 +48,10 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun onLoginSuccessFromResponse(response: AuthResponse) {
+        response.token?.takeIf { it.isNotBlank() }?.let { ApiClient.setToken(it) }
+        viewModelScope.launch {
+            authRepository.saveSession(response)
+        }
         sessionState = SessionState.Authenticated(
             UserSession(
                 email = response.email,

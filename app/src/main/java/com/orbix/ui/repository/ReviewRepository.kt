@@ -1,6 +1,5 @@
 package com.orbix.ui.repository
 
-import com.orbix.ui.local.TokenStorage
 import com.orbix.ui.model.AllReviewTagsResponse
 import com.orbix.ui.model.CreateUserReviewRequest
 import com.orbix.ui.model.CreateVehicleReviewBody
@@ -13,16 +12,11 @@ import com.orbix.ui.service.ApiResult
 import com.orbix.ui.util.parseApiError
 import retrofit2.HttpException
 
-class ReviewRepository(
-    private val tokenStorage: TokenStorage? = null
-) {
+class ReviewRepository {
     private suspend fun ensureAuthHeader() {
-        val token = tokenStorage?.getToken()?.takeIf { it.isNotBlank() }
-            ?: ApiClient.getToken()?.takeIf { it.isNotBlank() }
-        if (token == null) {
+        if (ApiClient.ensureTokenLoaded().isNullOrBlank()) {
             throw IllegalStateException("Sesión expirada. Inicia sesión de nuevo.")
         }
-        ApiClient.setToken(token)
     }
 
     suspend fun getVehicleReviews(vehicleId: Long): ApiResult<List<VehicleReviewResponse>> {

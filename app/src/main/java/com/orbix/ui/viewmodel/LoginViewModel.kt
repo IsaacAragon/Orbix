@@ -6,15 +6,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.orbix.ui.local.TokenStorage
-import com.orbix.ui.repository.AuthRepository
+import com.orbix.OrbixApplication
 import com.orbix.ui.model.AuthResponse
+import com.orbix.ui.repository.AuthRepository
 import com.orbix.ui.repository.AuthResult
 import kotlinx.coroutines.launch
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val authRepository = AuthRepository(TokenStorage(application))
+    private val authRepository: AuthRepository =
+        (application as OrbixApplication).authRepository
 
     var isLoading by mutableStateOf(false)
         private set

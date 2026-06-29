@@ -69,8 +69,8 @@ class AuthRepository(
     }
 
     suspend fun restoreSession(): UserSession? {
-        val token = tokenStorage.getToken() ?: return null
-        ApiClient.setToken(token)
+        val tokenAtStart = tokenStorage.getToken() ?: return null
+        ApiClient.setToken(tokenAtStart)
 
         return try {
             val response = ApiClient.authApi.me()
@@ -82,13 +82,15 @@ class AuthRepository(
                 permissions = response.permissions.toSet()
             )
         } catch (e: HttpException) {
-            if (e.code() == 401) {
+            if (e.code() == 401 && tokenStorage.getToken() == tokenAtStart) {
                 clearSession()
             }
             null
         } catch (e: Exception) {
+            val token = tokenStorage.getToken()
             val email = tokenStorage.getEmail()
-            if (email != null) {
+            if (!token.isNullOrBlank() && email != null) {
+                ApiClient.setToken(token)
                 UserSession(
                     email = email,
                     roles = tokenStorage.getRoles(),

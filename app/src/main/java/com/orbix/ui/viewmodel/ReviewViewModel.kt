@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.orbix.ui.local.TokenStorage
 import com.orbix.ui.model.AllReviewTagsResponse
 import com.orbix.ui.model.ReviewTagOption
 import com.orbix.ui.model.UserReviewResponse
@@ -26,7 +25,7 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
         const val TYPE_USER = "USER"
     }
 
-    private val repository = ReviewRepository(TokenStorage(application))
+    private val repository = ReviewRepository()
 
     var vehicleSummary by mutableStateOf<VehicleReviewSummary?>(null)
         private set

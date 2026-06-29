@@ -1,6 +1,5 @@
 package com.orbix.ui.repository
 
-import com.orbix.ui.local.TokenStorage
 import com.orbix.ui.model.CreateRentalRequest
 import com.orbix.ui.model.RentalResponse
 import com.orbix.ui.service.ApiClient
@@ -8,16 +7,11 @@ import com.orbix.ui.service.ApiResult
 import com.orbix.ui.util.parseApiError
 import retrofit2.HttpException
 
-class RentalRepository(
-    private val tokenStorage: TokenStorage? = null
-) {
+class RentalRepository {
     private suspend fun ensureAuthHeader() {
-        val token = tokenStorage?.getToken()?.takeIf { it.isNotBlank() }
-            ?: ApiClient.getToken()?.takeIf { it.isNotBlank() }
-        if (token == null) {
+        if (ApiClient.ensureTokenLoaded().isNullOrBlank()) {
             throw IllegalStateException("Sesión expirada. Inicia sesión de nuevo.")
         }
-        ApiClient.setToken(token)
     }
 
     private fun <T> authError(e: IllegalStateException): ApiResult<T> =

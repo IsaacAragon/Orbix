@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.orbix.ui.local.TokenStorage
 import com.orbix.ui.model.RentalResponse
 import com.orbix.ui.repository.RentalRepository
 import com.orbix.ui.service.ApiResult
@@ -14,7 +13,7 @@ import kotlinx.coroutines.launch
 
 class RentalViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = RentalRepository(TokenStorage(application))
+    private val repository = RentalRepository()
 
     var myRentals by mutableStateOf<List<RentalResponse>>(emptyList())
         private set
@@ -26,11 +25,14 @@ class RentalViewModel(application: Application) : AndroidViewModel(application) 
         private set
     var errorMessage by mutableStateOf<String?>(null)
         private set
+    var submitErrorMessage by mutableStateOf<String?>(null)
+        private set
     var successMessage by mutableStateOf<String?>(null)
         private set
 
     fun clearMessages() {
         errorMessage = null
+        submitErrorMessage = null
         successMessage = null
     }
 
@@ -41,10 +43,9 @@ class RentalViewModel(application: Application) : AndroidViewModel(application) 
     fun loadMyRentals() {
         viewModelScope.launch {
             isLoading = true
-            errorMessage = null
             when (val result = repository.myRequests()) {
                 is ApiResult.Success -> myRentals = result.data
-                is ApiResult.Error -> errorMessage = result.message
+                is ApiResult.Error -> { /* no bloquear la pantalla si falla la precarga */ }
             }
             isLoading = false
         }
@@ -70,7 +71,7 @@ class RentalViewModel(application: Application) : AndroidViewModel(application) 
     ) {
         viewModelScope.launch {
             isSubmitting = true
-            errorMessage = null
+            submitErrorMessage = null
             successMessage = null
             when (val result = repository.create(vehicleId, fechaInicio, fechaFin)) {
                 is ApiResult.Success -> {
@@ -78,7 +79,7 @@ class RentalViewModel(application: Application) : AndroidViewModel(application) 
                     successMessage = "¡Solicitud enviada! El propietario revisará tu solicitud pronto."
                     onSuccess(result.data)
                 }
-                is ApiResult.Error -> errorMessage = result.message
+                is ApiResult.Error -> submitErrorMessage = result.message
             }
             isSubmitting = false
         }

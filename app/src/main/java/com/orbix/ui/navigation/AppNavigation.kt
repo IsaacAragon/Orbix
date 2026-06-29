@@ -42,8 +42,8 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    val onRegisterSuccess: () -> Unit = {
-        sessionViewModel.restoreSession()
+    val onRegisterSuccess: (com.orbix.ui.model.AuthResponse) -> Unit = { response ->
+        sessionViewModel.onLoginSuccessFromResponse(response)
         Toast.makeText(context, "¡Cuenta creada con éxito!", Toast.LENGTH_LONG).show()
     }
 
@@ -156,7 +156,7 @@ fun AppNavigation() {
                     SignUpScreen(
                         onBack = { navController.popBackStack() },
                         onRegisterSuccess = {
-                            onRegisterSuccess()
+                            onRegisterSuccess(it)
                             navController.popBackStack()
                         }
                     )

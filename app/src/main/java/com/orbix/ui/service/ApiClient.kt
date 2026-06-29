@@ -13,6 +13,7 @@ object ApiClient {
     private const val BASE_URL = "http://10.0.2.2:8082/api/"
 
     private var appContext: Context? = null
+    @Volatile
     private var token: String? = null
     private var tokenStorage: TokenStorage? = null
 
@@ -33,7 +34,7 @@ object ApiClient {
         token = null
     }
 
-    fun getToken(): String? = token
+    fun getToken(): String? = token?.takeIf { it.isNotBlank() }
 
     private fun storage(): TokenStorage? {
         tokenStorage?.let { return it }
@@ -42,15 +43,25 @@ object ApiClient {
         }
     }
 
-    private fun resolveToken(): String? {
-        token?.takeIf { it.isNotBlank() }?.let { return it }
-        val stored = storage()?.let { storage ->
-            runBlocking { storage.getToken() }
-        }
-        if (!stored.isNullOrBlank()) {
+    /** Carga el token desde memoria o DataStore antes de peticiones autenticadas. */
+    suspend fun ensureTokenLoaded(): String? {
+        getToken()?.let { return it }
+        val stored = storage()?.getToken()?.takeIf { it.isNotBlank() }
+        if (stored != null) {
             token = stored
         }
-        return stored ?: token
+        return stored
+    }
+
+    private fun resolveToken(): String? {
+        getToken()?.let { return it }
+        val stored = storage()?.let { storage ->
+            runBlocking { storage.getToken()?.takeIf { it.isNotBlank() } }
+        }
+        if (stored != null) {
+            token = stored
+        }
+        return stored
     }
 
     private val okHttpClient: OkHttpClient by lazy {

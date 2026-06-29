@@ -107,8 +107,8 @@ fun CarDetailScreen(
         }
     }
 
-    LaunchedEffect(rentalVm.errorMessage) {
-        rentalVm.errorMessage?.let { message ->
+    LaunchedEffect(rentalVm.submitErrorMessage) {
+        rentalVm.submitErrorMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
     }
