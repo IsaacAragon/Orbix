@@ -3,6 +3,7 @@ package com.orbix.ui.screen
 import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -139,34 +140,46 @@ fun RentVehicleDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                OutlinedTextField(
-                    value = startDisplay,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Fecha inicio") },
-                    placeholder = { Text("Seleccionar") },
-                    trailingIcon = {
-                        Icon(Icons.Default.Event, contentDescription = null)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = !isSubmitting) { openDatePicker(isStart = true) }
-                )
-                OutlinedTextField(
-                    value = endDisplay,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Fecha fin") },
-                    placeholder = { Text("Seleccionar") },
-                    trailingIcon = {
-                        Icon(Icons.Default.Event, contentDescription = null)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = !isSubmitting && startDate != null) {
-                            openDatePicker(isStart = false)
-                        }
-                )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = startDisplay,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Fecha inicio") },
+                        placeholder = { Text("Seleccionar") },
+                        trailingIcon = {
+                            Icon(Icons.Default.Event, contentDescription = null)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable(enabled = !isSubmitting) { openDatePicker(isStart = true) }
+                    )
+                }
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = endDisplay,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Fecha fin") },
+                        placeholder = { Text("Seleccionar") },
+                        trailingIcon = {
+                            Icon(Icons.Default.Event, contentDescription = null)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable(enabled = !isSubmitting) {
+                                if (startDate != null) {
+                                    openDatePicker(isStart = false)
+                                }
+                            }
+                    )
+                }
                 if (days > 0) {
                     Text(
                         text = "$${formatPrice(pricePerDay)} × $days día(s) = $${formatPrice(total)}",
