@@ -1,6 +1,7 @@
 package com.orbix.ui.screen
 
 import android.service.autofill.OnClickAction
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,36 +25,71 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.orbix.ui.model.Vehicle
+import com.orbix.ui.model.VehicleCategory
+import com.orbix.ui.model.label
+import com.orbix.ui.viewmodel.VehicleViewModel
+import kotlinx.coroutines.delay
 import kotlin.math.sin
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-//DEMO, YA IMPLEMENTADA LA API SE VA CAMBIAR
 fun SearchScreen(
-    onBack : () -> Unit,
-    onVehicleSelected: () -> Unit
-){
+    onBack: () -> Unit,
+    onVehicleSelected: (String) -> Unit,
+    vm: VehicleViewModel = viewModel(viewModelStoreOwner = LocalContext.current as ComponentActivity)
+) {
     var searchText by remember { mutableStateOf("") }
+    var debouncedSearchText by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Todos") }
 
-    val categories = listOf(
-        "Todos",
-        "SUV",
-        "Sedán",
-        "Moto",
-        "Pickup",
-        "Electrico"
-    )
+    // Debounce search input to minimize calculations and UI jitter
+    LaunchedEffect(searchText) {
+        delay(300)
+        debouncedSearchText = searchText
+    }
+
+    LaunchedEffect(Unit) {
+        vm.loadVehicles()
+    }
+
+    val categories = remember {
+        listOf("Todos") + VehicleCategory.entries.map { it.label() }
+    }
+
+    val filteredVehicles = remember(debouncedSearchText, selectedCategory, vm.vehicles) {
+        vm.vehicles.filter { vehicle ->
+            // Only show available vehicles as requested
+            val matchesAvailability = vehicle.isAvailable
+            
+            // Name match (brand + model) case-insensitive
+            val name = "${vehicle.brand} ${vehicle.model}"
+            val matchesSearch = debouncedSearchText.isBlank() || name.contains(debouncedSearchText, ignoreCase = true)
+            
+            // Category match
+            val matchesCategory = if (selectedCategory == "Todos") {
+                true
+            } else {
+                val enumCategory = VehicleCategory.entries.find { it.label() == selectedCategory }
+                vehicle.category.orEmpty().equals(enumCategory?.name, ignoreCase = true) ||
+                        vehicle.category.orEmpty().equals(selectedCategory, ignoreCase = true)
+            }
+            
+            matchesAvailability && matchesSearch && matchesCategory
+        }
+    }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Buscar Vehiculos",
+                        "Buscar Vehículos",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -63,7 +99,6 @@ fun SearchScreen(
                         Icon(
                             Icons.Default.ArrowBack,
                             contentDescription = "Regresar"
-
                         )
                     }
                 },
@@ -73,7 +108,7 @@ fun SearchScreen(
             )
         },
         containerColor = MaterialTheme.colorScheme.background
-    ) {padding ->
+    ) { padding ->
 
         LazyColumn(
             modifier = Modifier
@@ -82,9 +117,9 @@ fun SearchScreen(
                 .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            item{
+            item {
                 Text(
-                    text = "Encuentra tu vehiculo ideal",
+                    text = "Encuentra tu vehículo ideal",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold
                 )
@@ -92,7 +127,7 @@ fun SearchScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Explora y filtra vehiculos disponibles.",
+                    text = "Explora y filtra vehículos disponibles.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -101,7 +136,7 @@ fun SearchScreen(
             item {
                 OutlinedTextField(
                     value = searchText,
-                    onValueChange = {searchText = it},
+                    onValueChange = { searchText = it },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = {
                         Text("Buscar por marca o modelo")
@@ -125,7 +160,7 @@ fun SearchScreen(
 
             item {
                 Text(
-                    text = "Categoria",
+                    text = "Categoría",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -135,7 +170,7 @@ fun SearchScreen(
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(categories) {category ->
+                    items(categories) { category ->
                         FilterChip(
                             selected = selectedCategory == category,
                             onClick = {
@@ -157,10 +192,40 @@ fun SearchScreen(
                 )
             }
 
-            item(5) {
-                SearchVehicleCard(
-                    onClick = onVehicleSelected
-                )
+            if (vm.isRefreshing && vm.vehicles.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            } else if (filteredVehicles.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No se encontraron vehículos disponibles.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                items(filteredVehicles) { vehicle ->
+                    VehicleCard(
+                        vehicle = vehicle,
+                        onNavigateToCarDetail = onVehicleSelected,
+                        onToggleFavorite = { vm.toggleFavorite(it) }
+                    )
+                }
             }
 
             item {
@@ -168,78 +233,4 @@ fun SearchScreen(
             }
         }
     }
-}
-
-
-@Composable
-fun SearchVehicleCard(
-    onClick: () -> Unit
-){
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ){
-                Icon(
-                    imageVector = Icons.Default.DirectionsCar,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Toyota Corolla 2023",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = "Automático • 5 Asientos",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Text(
-                    text = "$30/día",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.ExtraBold
-                )
-
-                Button(
-                    onClick = onClick,
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Text(
-                        "Ver Detalles",
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
-}
+}

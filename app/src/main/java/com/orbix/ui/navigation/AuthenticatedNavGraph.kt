@@ -125,7 +125,9 @@ fun NavGraphBuilder.authenticatedRoutes(
     composable<Search> {
         SearchScreen(
             onBack = { navController.popBackStack() },
-            onVehicleSelected = { navController.navigate(RentalDetail) }
+            onVehicleSelected = { carId ->
+                navController.navigate(CarDetail(carId))
+            }
         )
     }
 
