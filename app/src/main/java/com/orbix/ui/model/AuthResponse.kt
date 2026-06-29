@@ -7,5 +7,6 @@ data class AuthResponse(
     val roles: List<String>,
     val permissions: List<String>,
     val userId: Long? = null,
-    val nombre: String? = null
+    val nombre: String? = null,
+    val telefono: String? = null
 )

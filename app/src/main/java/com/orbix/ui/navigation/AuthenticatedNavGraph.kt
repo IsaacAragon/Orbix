@@ -183,6 +183,8 @@ private fun AuthenticatedMainScreen(
         userPermissions = session.permissions,
         userRoles = session.roles,
         userNombre = session.nombre,
+        userTelefono = session.telefono,
+        onPhoneUpdated = { telefono -> sessionViewModel.patchSessionTelefono(telefono) },
         onLogout = { sessionViewModel.logout() },
         onNavigateToCarReview = { vehicleId ->
             navController.navigate(CarReview(vehicleId))

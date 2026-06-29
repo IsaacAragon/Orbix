@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AssistChip
@@ -452,10 +454,47 @@ fun CarDetailScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Miembro desde 2026",
+                                text = vehicle?.ownerPhone ?: "Sin teléfono",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            vehicle?.ownerPhone?.takeIf { it.isNotBlank() }?.let { phone ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            val intent = android.content.Intent(
+                                                android.content.Intent.ACTION_DIAL,
+                                                android.net.Uri.parse("tel:$phone")
+                                            )
+                                            context.startActivity(intent)
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Phone,
+                                            contentDescription = "Llamar al arrendador",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            val intent = android.content.Intent(android.content.Intent.ACTION_INSERT).apply {
+                                                type = android.provider.ContactsContract.RawContacts.CONTENT_TYPE
+                                                putExtra(android.provider.ContactsContract.Intents.Insert.NAME, vehicle?.ownerName ?: "Arrendador Orbix")
+                                                putExtra(android.provider.ContactsContract.Intents.Insert.PHONE, phone)
+                                            }
+                                            context.startActivity(intent)
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.PersonAdd,
+                                            contentDescription = "Agregar a contactos",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                         Surface(

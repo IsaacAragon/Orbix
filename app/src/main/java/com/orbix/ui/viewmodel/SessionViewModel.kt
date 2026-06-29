@@ -58,9 +58,15 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
                 roles = response.roles.toSet(),
                 permissions = response.permissions.toSet(),
                 userId = response.userId,
-                nombre = response.nombre
+                nombre = response.nombre,
+                telefono = response.telefono
             )
         )
+    }
+
+    fun patchSessionTelefono(telefono: String?) {
+        val current = (sessionState as? SessionState.Authenticated)?.session ?: return
+        sessionState = SessionState.Authenticated(current.copy(telefono = telefono))
     }
 
     fun logout(onComplete: () -> Unit = {}) {

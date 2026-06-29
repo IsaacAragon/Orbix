@@ -25,6 +25,7 @@ data class RentalResponse(
     val clienteId: Long,
     val clienteNombre: String?,
     val clienteEmail: String,
+    val clienteTelefono: String?,
     val ownerId: Long?,
     val ownerNombre: String?,
     val fechaInicio: String,

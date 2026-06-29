@@ -4,8 +4,10 @@ import com.orbix.ui.model.AuthResponse
 import com.orbix.ui.model.ClientProfileResponse
 import com.orbix.ui.model.LoginRequest
 import com.orbix.ui.model.RegisterRequest
+import com.orbix.ui.model.UpdatePhoneRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 
 interface AuthApi {
@@ -20,4 +22,7 @@ interface AuthApi {
 
     @GET("auth/profile")
     suspend fun getProfile(): ClientProfileResponse
+
+    @PATCH("auth/phone")
+    suspend fun updatePhone(@Body body: UpdatePhoneRequest): AuthResponse
 }

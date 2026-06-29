@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.orbix.ui.util.isArrendadorEmail
 import com.orbix.ui.util.minimumBirthDateCalendar
 import com.orbix.ui.util.toApiDate
 import com.orbix.ui.viewmodel.SignUpViewModel
@@ -63,6 +65,7 @@ fun SignUpScreen(
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var telefono by remember { mutableStateOf("") }
     var birthDateDisplay by remember { mutableStateOf("") }
     var birthDateApi by remember { mutableStateOf<String?>(null) }
     var password by remember { mutableStateOf("") }
@@ -90,8 +93,11 @@ fun SignUpScreen(
         datePicker.maxDate = maxBirthDate.timeInMillis
     }
 
+    val isArrendador = isArrendadorEmail(email)
+
     val isFormValid = fullName.isNotBlank() &&
             email.isNotBlank() &&
+            telefono.isNotBlank() &&
             birthDateApi != null &&
             password.isNotBlank() &&
             confirmPassword.isNotBlank() &&
@@ -172,7 +178,7 @@ fun SignUpScreen(
                 singleLine = true
             )
 
-            if (email.lowercase().endsWith("@orbix.com")) {
+            if (isArrendador) {
                 Text(
                     text = "Tu cuenta se creará como arrendador",
                     style = MaterialTheme.typography.bodySmall,
@@ -180,6 +186,20 @@ fun SignUpScreen(
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
+
+            OutlinedTextField(
+                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                value = telefono,
+                onValueChange = {
+                    telefono = it
+                    viewModel.clearError()
+                },
+                label = { Text("Teléfono") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
+            )
 
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
@@ -269,6 +289,7 @@ fun SignUpScreen(
                         password = password,
                         confirmPassword = confirmPassword,
                         fechaNacimiento = birthDateApi,
+                        telefono = telefono.takeIf { it.isNotBlank() },
                         onSuccess = onRegisterSuccess
                     )
                 },
