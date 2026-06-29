@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -26,11 +25,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.LocalGasStation
-import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Today
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -41,11 +37,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,17 +55,21 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+import android.widget.Toast
 import coil.compose.AsyncImage
 
+import com.orbix.ui.model.RentalStatus
 import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.model.label
 import com.orbix.ui.theme.WhatsappGreen
+import com.orbix.ui.util.Permissions
 import com.orbix.ui.util.Roles
+import com.orbix.ui.util.formatDateRange
+import com.orbix.ui.viewmodel.RentalViewModel
 import com.orbix.ui.viewmodel.ReviewViewModel
 import com.orbix.ui.viewmodel.VehicleViewModel
 
@@ -80,18 +78,42 @@ import com.orbix.ui.viewmodel.VehicleViewModel
 fun CarDetailScreen(
     carId: String,
     userRoles: Set<String>,
+    userPermissions: Set<String>,
     onBack: () -> Unit,
     onNavigateToRules: () -> Unit,
     onNavigateToReview: (Long) -> Unit
 ) {
-    val activity = LocalContext.current as ComponentActivity
+    val context = LocalContext.current
+    val activity = context as ComponentActivity
     val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
     val reviewVm: ReviewViewModel = viewModel()
+    val rentalVm: RentalViewModel = viewModel()
     val vehicle = vm.vehicles.find { it.id?.toString() == carId }
 
     LaunchedEffect(vehicle?.id) {
         vehicle?.id?.let { reviewVm.loadVehicleReviews(it) }
     }
+
+    LaunchedEffect(vehicle?.id, userRoles) {
+        if (Roles.isCliente(userRoles) && vehicle?.id != null) {
+            rentalVm.loadMyRentals()
+        }
+    }
+
+    LaunchedEffect(rentalVm.successMessage) {
+        rentalVm.successMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            rentalVm.clearMessages()
+        }
+    }
+
+    LaunchedEffect(rentalVm.errorMessage) {
+        rentalVm.errorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    val existingRental = vehicle?.id?.let { rentalVm.rentalForVehicle(it) }
 
     val carName = vehicle?.let { "${it.brand} ${it.model}" } ?: "Vehículo no encontrado"
     val carPrice = vehicle?.pricePerDay?.let {
@@ -102,14 +124,16 @@ fun CarDetailScreen(
     val transmission = vehicle?.transmission ?: "Automática"
     val passengers = vehicle?.passengers ?: "Hasta 5"
     val canReview = Roles.canReviewVehicle(userRoles) && vehicle?.id != null
-    var hasRented by remember(vehicle?.id) { mutableStateOf(false) }
-    val canRent = canReview && vehicle?.isAvailable == true && !hasRented
+    val canRent = Roles.isCliente(userRoles) &&
+            Permissions.canCreateRental(userPermissions) &&
+            vehicle?.isAvailable == true &&
+            existingRental == null
+    val canReviewAfterRental = canReview &&
+            existingRental?.estado == RentalStatus.APROBADA
 
     val scrollState = rememberScrollState()
 
-    var showRentDaysDialog by remember { mutableStateOf(false) }
-    var rentDaysText by remember { mutableStateOf("") }
-    var rentDaysError by remember { mutableStateOf<String?>(null) }
+    var showRentDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -293,7 +317,32 @@ fun CarDetailScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (hasRented && canReview) {
+                if (existingRental?.estado == RentalStatus.PENDIENTE) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Solicitud pendiente",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Tu solicitud del ${formatDateRange(existingRental.fechaInicio, existingRental.fechaFin)} está en revisión. El propietario te responderá pronto.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.85f)
+                            )
+                        }
+                    }
+                }
+                if (canReviewAfterRental) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Card(
                         shape = RoundedCornerShape(16.dp),
@@ -465,7 +514,7 @@ fun CarDetailScreen(
                     }
 
                     when {
-                        hasRented && canReview -> {
+                        canReviewAfterRental -> {
                             Button(
                                 onClick = { vehicle?.id?.let { onNavigateToReview(it) } },
                                 colors = ButtonDefaults.buttonColors(
@@ -488,9 +537,29 @@ fun CarDetailScreen(
                                 )
                             }
                         }
+                        existingRental?.estado == RentalStatus.PENDIENTE -> {
+                            Button(
+                                onClick = { },
+                                enabled = false,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    disabledContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                    disabledContentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
+                            ) {
+                                Text(
+                                    text = "Solicitud pendiente",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                         canRent -> {
                             Button(
-                                onClick = { showRentDaysDialog = true },
+                                onClick = { showRentDialog = true },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -507,8 +576,8 @@ fun CarDetailScreen(
                         }
                         else -> {
                             Button(
-                                onClick = { showRentDaysDialog = true },
-                                enabled = vehicle?.isAvailable != false,
+                                onClick = { },
+                                enabled = vehicle?.isAvailable != false && !Roles.isCliente(userRoles),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = WhatsappGreen,
                                     contentColor = Color.White
@@ -526,7 +595,11 @@ fun CarDetailScreen(
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = if (vehicle?.isAvailable == false) "No disponible" else "Contactar",
+                                        text = when {
+                                            vehicle?.isAvailable == false -> "No disponible"
+                                            existingRental?.estado == RentalStatus.RECHAZADA -> "Solicitud rechazada"
+                                            else -> "Contactar"
+                                        },
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -537,96 +610,25 @@ fun CarDetailScreen(
                 }
             }
 
-            if (showRentDaysDialog) {
-                AlertDialog(
-                    onDismissRequest = {
-                        showRentDaysDialog = false
-                        rentDaysText = ""
-                        rentDaysError = null
-                    },
-                    shape = RoundedCornerShape(24.dp),
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Today,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(36.dp)
-                        )
-                    },
-                    title = {
-                        Text(
-                            text = "Días de renta",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    },
-                    text = {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "¿Cuántos días deseas rentar este vehículo?",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            OutlinedTextField(
-                                value = rentDaysText,
-                                onValueChange = { newValue ->
-                                    if (newValue.all { it.isDigit() }) {
-                                        rentDaysText = newValue
-                                        rentDaysError = null
-                                    }
-                                },
-                                label = { Text("Número de días") },
-                                placeholder = { Text("Ej. 3") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                isError = rentDaysError != null,
-                                supportingText = {
-                                    if (rentDaysError != null) {
-                                        Text(
-                                            text = rentDaysError ?: "",
-                                            color = MaterialTheme.colorScheme.error,
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
+            if (showRentDialog && vehicle?.id != null) {
+                RentVehicleDialog(
+                    pricePerDay = vehicle.pricePerDay ?: 0.0,
+                    isSubmitting = rentalVm.isSubmitting,
+                    onDismiss = {
+                        if (!rentalVm.isSubmitting) {
+                            showRentDialog = false
+                            rentalVm.clearMessages()
                         }
                     },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                val days = rentDaysText.toIntOrNull()
-                                if (days == null || days <= 0) {
-                                    rentDaysError = "Por favor, ingresa un número de días válido."
-                                } else {
-                                    // TODO: En el futuro guardar en la base de datos y redirigir a WhatsApp
-                                    if (canRent) {
-                                        hasRented = true
-                                    }
-                                    showRentDaysDialog = false
-                                    rentDaysText = ""
-                                    rentDaysError = null
-                                }
-                            },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Confirmar")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(
-                            onClick = {
-                                showRentDaysDialog = false
-                                rentDaysText = ""
-                                rentDaysError = null
+                    onConfirm = { inicio, fin ->
+                        rentalVm.createRental(
+                            vehicleId = vehicle.id!!,
+                            fechaInicio = inicio,
+                            fechaFin = fin,
+                            onSuccess = {
+                                showRentDialog = false
                             }
-                        ) {
-                            Text("Cancelar")
-                        }
+                        )
                     }
                 )
             }

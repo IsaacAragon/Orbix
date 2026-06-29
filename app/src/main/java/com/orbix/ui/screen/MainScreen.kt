@@ -117,8 +117,9 @@ fun MainScreen(
                     onNavigateToSearch = onNavigateToSearch
                 )
                 1 -> ReservationsScreen(
+                    userRoles = userRoles,
                     onBack = { selectedItem = 0 },
-                    onRateService = { onNavigateToUserReview(2L) }
+                    onNavigateToCarReview = onNavigateToCarReview
                 )
                 2 -> NotificationsScreen()
                 3 -> ProfileScreen(

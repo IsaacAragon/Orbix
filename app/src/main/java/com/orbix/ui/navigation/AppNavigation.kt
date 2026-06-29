@@ -119,6 +119,7 @@ fun AppNavigation() {
                     CarDetailScreen(
                         carId = carDetail.carId,
                         userRoles = state.session.roles,
+                        userPermissions = state.session.permissions,
                         onBack = { navController.popBackStack() },
                         onNavigateToRules = {
                             navController.navigate(HostRules)
