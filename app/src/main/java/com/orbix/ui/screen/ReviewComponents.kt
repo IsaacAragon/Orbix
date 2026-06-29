@@ -105,12 +105,15 @@ fun ReviewTagsRow(tags: List<String>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun UserReviewCard(review: UserReviewResponse) {
+fun UserReviewCard(
+    review: UserReviewResponse,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh
+) {
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = containerColor
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
