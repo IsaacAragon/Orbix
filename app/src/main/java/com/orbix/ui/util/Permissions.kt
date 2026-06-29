@@ -9,4 +9,7 @@ object Permissions {
 
     fun canCreateRental(permissions: Set<String>) =
         permissions.contains("rentals:create")
+
+    fun canReadOwnRentals(permissions: Set<String>) =
+        permissions.contains("rentals:read:own")
 }

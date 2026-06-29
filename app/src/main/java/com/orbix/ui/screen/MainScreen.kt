@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 import com.orbix.ui.navigation.NavItem
+import com.orbix.ui.util.Roles
 import com.orbix.ui.viewmodel.VehicleViewModel
 
 @Composable
@@ -43,7 +44,6 @@ fun MainScreen(
     onNavigateToNewVehicle: () -> Unit,
     onNavigateToTermsAndConditions: () -> Unit,
     onNavigateToFavorites: () -> Unit,
-    onNavigateToSignUp: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToIDVerification: () -> Unit,
     onNavigateToCarManagement: () -> Unit,
@@ -53,9 +53,15 @@ fun MainScreen(
     val activity = LocalContext.current as ComponentActivity
     val vehicleViewModel: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
 
+    val isArrendador = Roles.isArrendador(userRoles)
+
     val navItems = listOf(
         NavItem("Inicio", Icons.Default.Home, 0),
-        NavItem("Reservas", Icons.Default.DateRange, 1),
+        NavItem(
+            if (isArrendador) "Solicitudes" else "Reservas",
+            Icons.Default.DateRange,
+            1
+        ),
         NavItem("Notificaciones", Icons.Default.Notifications, 2),
         NavItem("Perfil", Icons.Default.Person, 3)
     )
@@ -111,16 +117,24 @@ fun MainScreen(
         ) {
             when (selectedItem) {
                 0 -> HomeScreen(
+                    userRoles = userRoles,
                     userPermissions = userPermissions,
                     onNavigateToCarDetail = onNavigateToCarDetail,
                     onNavigateToNewVehicle = onNavigateToNewVehicle,
                     onNavigateToSearch = onNavigateToSearch
                 )
-                1 -> ReservationsScreen(
-                    userRoles = userRoles,
-                    onBack = { selectedItem = 0 },
-                    onNavigateToCarReview = onNavigateToCarReview
-                )
+                1 -> if (isArrendador) {
+                    RentalManagementScreen(
+                        onBack = { selectedItem = 0 },
+                        embeddedInTab = true
+                    )
+                } else {
+                    ReservationsScreen(
+                        userRoles = userRoles,
+                        onBack = { selectedItem = 0 },
+                        onNavigateToCarReview = onNavigateToCarReview
+                    )
+                }
                 2 -> NotificationsScreen()
                 3 -> ProfileScreen(
                     userEmail = userEmail,
@@ -132,7 +146,6 @@ fun MainScreen(
                     },
                     onNavigateToUserReview = { onNavigateToUserReview(2L) },
                     onNavigateToFavorites = onNavigateToFavorites,
-                    onNavigateToSignUp = onNavigateToSignUp,
                     onNavigateToIDVerification = onNavigateToIDVerification,
                     onNavigateToCarManagement = onNavigateToCarManagement,
                     onNavigateToRentalManagement = onNavigateToRentalManagement,

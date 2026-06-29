@@ -172,6 +172,15 @@ fun SignUpScreen(
                 singleLine = true
             )
 
+            if (email.lowercase().endsWith("@orbix.com")) {
+                Text(
+                    text = "Tu cuenta se creará como arrendador",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
+
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     leadingIcon = { Icon(Icons.Default.Event, contentDescription = null) },

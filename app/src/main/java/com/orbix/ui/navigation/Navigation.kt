@@ -9,6 +9,12 @@ object Login
 object Home
 
 @Serializable
+object HomeCliente
+
+@Serializable
+object HomeArrendador
+
+@Serializable
 data class CarDetail(val carId: String)
 
 @Serializable

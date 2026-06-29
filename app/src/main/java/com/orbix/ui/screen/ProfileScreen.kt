@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -59,7 +58,6 @@ fun ProfileScreen(
     onNavigateToCarReview: () -> Unit,
     onNavigateToUserReview: () -> Unit,
     onNavigateToFavorites: () -> Unit,
-    onNavigateToSignUp: () -> Unit,
     onNavigateToIDVerification: () -> Unit,
     onNavigateToCarManagement: () -> Unit,
     onNavigateToRentalManagement: () -> Unit,
@@ -175,39 +173,6 @@ fun ProfileScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-
-                    TextButton(
-                        onClick = onNavigateToSignUp,
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.PersonAdd,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = "Crear cuenta",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                            Icon(
-                                imageVector = Icons.Default.ArrowForward,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
 
                     if (Roles.canReviewVehicle(userRoles)) {
                         TextButton(
