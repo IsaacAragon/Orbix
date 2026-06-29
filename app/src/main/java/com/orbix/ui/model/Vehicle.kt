@@ -5,7 +5,7 @@ data class Vehicle(
     val brand: String,
     val model: String,
     val year: String?,
-    val transmission: String?,
+    val transmission: Transmission,
     val passengers: String?,
     val pricePerDay: Double?,
     val imageUrl: String?,

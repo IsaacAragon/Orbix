@@ -121,7 +121,7 @@ fun CarDetailScreen(
     } ?: "0"
     val summary = reviewVm.vehicleSummary
     val carRating = summary?.let { String.format("%.1f", it.averageRating) } ?: "—"
-    val transmission = vehicle?.transmission ?: "Automática"
+    val transmission = vehicle?.transmission?.label() ?: "—"
     val passengers = vehicle?.passengers ?: "Hasta 5"
     val canReview = Roles.canReviewVehicle(userRoles) && vehicle?.id != null
     val canRent = Roles.isCliente(userRoles) &&

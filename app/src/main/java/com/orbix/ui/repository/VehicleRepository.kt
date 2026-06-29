@@ -2,6 +2,7 @@ package com.orbix.ui.repository
 
 import com.orbix.ui.model.CreateVehicleRequest
 import com.orbix.ui.model.Vehicle
+import com.orbix.ui.model.Transmission
 import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.service.ApiClient
 import com.orbix.ui.service.ApiResult
@@ -26,7 +27,7 @@ class VehicleRepository {
         brand: String,
         model: String,
         year: String,
-        transmission: String,
+        transmission: Transmission,
         passengers: String,
         pricePerDay: Double,
         description: String,

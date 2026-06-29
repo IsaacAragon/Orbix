@@ -1,6 +1,7 @@
 package com.orbix.ui.screen
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.orbix.ui.model.Transmission
 import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.model.label
 import com.orbix.ui.viewmodel.NewVehicleViewModel
@@ -70,7 +73,7 @@ fun NewVehicleScreen(
     var year by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var seats by remember { mutableStateOf("") }
-    var transmission by remember { mutableStateOf("") }
+    var selectedTransmission by remember { mutableStateOf<Transmission?>(null) }
     var description by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<VehicleCategory?>(null) }
     var categoryExpanded by remember { mutableStateOf(false) }
@@ -78,7 +81,7 @@ fun NewVehicleScreen(
     val scrollState = rememberScrollState()
 
     val isFormValid = brand.isNotBlank() && model.isNotBlank() && year.isNotBlank() &&
-            transmission.isNotBlank() && seats.isNotBlank() && price.isNotBlank() &&
+            selectedTransmission != null && seats.isNotBlank() && price.isNotBlank() &&
             description.isNotBlank() && selectedCategory != null
 
     Scaffold(
@@ -205,18 +208,29 @@ fun NewVehicleScreen(
                 }
             }
 
-            OutlinedTextField(
-                leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                value = transmission,
-                onValueChange = {
-                    transmission = it
-                    viewModel.clearError()
-                },
-                label = { Text("Transmisión") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true
+            Text(
+                text = "Transmisión",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Transmission.entries.forEach { option ->
+                    FilterChip(
+                        selected = selectedTransmission == option,
+                        onClick = {
+                            selectedTransmission = option
+                            viewModel.clearError()
+                        },
+                        label = { Text(option.label()) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Settings, contentDescription = null)
+                        }
+                    )
+                }
+            }
 
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Groups, contentDescription = null) },
@@ -275,7 +289,7 @@ fun NewVehicleScreen(
                         brand = brand,
                         model = model,
                         year = year,
-                        transmission = transmission,
+                        transmission = selectedTransmission,
                         passengers = seats,
                         pricePerDay = price,
                         description = description,

@@ -643,7 +643,7 @@ fun VehicleCard(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "${vehicle.year.orEmpty()} • ${vehicle.transmission.orEmpty()}",
+                        text = "${vehicle.year.orEmpty()} • ${vehicle.transmission.label()}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 0.5.sp
@@ -765,7 +765,7 @@ fun VehicleCard(
                             style = MaterialTheme.typography.labelSmall
                         )
                         Text(
-                            text = vehicle.transmission.orEmpty(),
+                            text = vehicle.transmission.label(),
                             fontWeight = FontWeight.Bold
                         )
                     }
