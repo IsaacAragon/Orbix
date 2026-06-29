@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.orbix.ui.model.ReviewTagOption
+import com.orbix.ui.model.UserReviewResponse
 import com.orbix.ui.model.VehicleReviewResponse
 import com.orbix.ui.model.formatTagCode
 import com.orbix.ui.util.formatFecha
@@ -101,6 +102,52 @@ fun ReviewTagsRow(tags: List<String>, modifier: Modifier = Modifier) {
         fontWeight = FontWeight.Medium,
         modifier = modifier
     )
+}
+
+@Composable
+fun UserReviewCard(review: UserReviewResponse) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = review.reviewerName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = formatFecha(review.fecha),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            StarRatingDisplay(review.rating)
+            review.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
+                Spacer(modifier = Modifier.height(8.dp))
+                ReviewTagsRow(tags)
+            }
+            review.comment?.takeIf { it.isNotBlank() }?.let { comment ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = comment,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
 }
 
 @Composable

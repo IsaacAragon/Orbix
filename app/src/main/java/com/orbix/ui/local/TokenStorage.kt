@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -22,6 +23,8 @@ class TokenStorage(private val context: Context) {
             prefs[KEY_EMAIL] = response.email
             prefs[KEY_ROLES] = response.roles.toSet()
             prefs[KEY_PERMISSIONS] = response.permissions.toSet()
+            response.userId?.let { prefs[KEY_USER_ID] = it }
+            response.nombre?.takeIf { it.isNotBlank() }?.let { prefs[KEY_NOMBRE] = it }
         }
         response.token?.takeIf { it.isNotBlank() }?.let { ApiClient.setToken(it) }
     }
@@ -54,6 +57,14 @@ class TokenStorage(private val context: Context) {
         return context.dataStore.data.map { it[KEY_ROLES] ?: emptySet() }.first()
     }
 
+    suspend fun getUserId(): Long? {
+        return context.dataStore.data.map { it[KEY_USER_ID] }.first()
+    }
+
+    suspend fun getNombre(): String? {
+        return context.dataStore.data.map { it[KEY_NOMBRE] }.first()
+    }
+
     suspend fun clearSession() {
         context.dataStore.edit { it.clear() }
         ApiClient.clearToken()
@@ -64,5 +75,7 @@ class TokenStorage(private val context: Context) {
         private val KEY_EMAIL = stringPreferencesKey("email")
         private val KEY_ROLES = stringSetPreferencesKey("roles")
         private val KEY_PERMISSIONS = stringSetPreferencesKey("permissions")
+        private val KEY_USER_ID = longPreferencesKey("user_id")
+        private val KEY_NOMBRE = stringPreferencesKey("nombre")
     }
 }

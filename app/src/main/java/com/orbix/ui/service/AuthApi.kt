@@ -1,6 +1,7 @@
 package com.orbix.ui.service
 
 import com.orbix.ui.model.AuthResponse
+import com.orbix.ui.model.ClientProfileResponse
 import com.orbix.ui.model.LoginRequest
 import com.orbix.ui.model.RegisterRequest
 import retrofit2.http.Body
@@ -16,4 +17,7 @@ interface AuthApi {
 
     @GET("auth/me")
     suspend fun me(): AuthResponse
+
+    @GET("auth/profile")
+    suspend fun getProfile(): ClientProfileResponse
 }

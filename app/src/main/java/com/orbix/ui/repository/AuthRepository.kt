@@ -16,7 +16,9 @@ sealed class AuthResult {
 data class UserSession(
     val email: String,
     val roles: Set<String>,
-    val permissions: Set<String>
+    val permissions: Set<String>,
+    val userId: Long? = null,
+    val nombre: String? = null
 )
 
 class AuthRepository(
@@ -79,7 +81,9 @@ class AuthRepository(
             UserSession(
                 email = response.email,
                 roles = response.roles.toSet(),
-                permissions = response.permissions.toSet()
+                permissions = response.permissions.toSet(),
+                userId = response.userId,
+                nombre = response.nombre
             )
         } catch (e: HttpException) {
             if (e.code() == 401 && tokenStorage.getToken() == tokenAtStart) {
@@ -94,7 +98,9 @@ class AuthRepository(
                 UserSession(
                     email = email,
                     roles = tokenStorage.getRoles(),
-                    permissions = tokenStorage.getPermissions()
+                    permissions = tokenStorage.getPermissions(),
+                    userId = tokenStorage.getUserId(),
+                    nombre = tokenStorage.getNombre()
                 )
             } else {
                 null

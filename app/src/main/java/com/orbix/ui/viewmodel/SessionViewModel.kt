@@ -56,7 +56,9 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             UserSession(
                 email = response.email,
                 roles = response.roles.toSet(),
-                permissions = response.permissions.toSet()
+                permissions = response.permissions.toSet(),
+                userId = response.userId,
+                nombre = response.nombre
             )
         )
     }

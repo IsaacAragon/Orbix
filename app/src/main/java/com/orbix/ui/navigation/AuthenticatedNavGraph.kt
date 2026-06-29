@@ -177,6 +177,7 @@ private fun AuthenticatedMainScreen(
         userEmail = session.email,
         userPermissions = session.permissions,
         userRoles = session.roles,
+        userNombre = session.nombre,
         onLogout = { sessionViewModel.logout() },
         onNavigateToCarReview = { vehicleId ->
             navController.navigate(CarReview(vehicleId))
