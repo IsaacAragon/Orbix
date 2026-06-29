@@ -51,7 +51,6 @@ fun MainScreen(
     val activity = LocalContext.current as ComponentActivity
     val vehicleViewModel: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
     val isArrendador = Roles.isArrendador(userRoles)
-
     val navItems = listOf(
         NavItem("Inicio", Icons.Default.Home, 0),
         NavItem(
