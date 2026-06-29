@@ -69,6 +69,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun OrbixTheme(
+    isArrendador: Boolean = false,
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
@@ -79,8 +80,35 @@ fun OrbixTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> {
+            if (isArrendador) {
+                DarkColorScheme.copy(
+                    primary = BluePrimary,
+                    primaryContainer = BlueContainerDark,
+                    onPrimaryContainer = BluePrimary,
+                    secondary = OrangePrimary,
+                    secondaryContainer = OrangeContainerDark,
+                    onSecondaryContainer = OrangePrimary
+                )
+            } else {
+                DarkColorScheme
+            }
+        }
+
+        else -> {
+            if (isArrendador) {
+                LightColorScheme.copy(
+                    primary = BluePrimary,
+                    primaryContainer = BlueContainerLight,
+                    onPrimaryContainer = BluePrimary,
+                    secondary = OrangePrimary,
+                    secondaryContainer = OrangeContainerLight,
+                    onSecondaryContainer = OrangePrimary
+                )
+            } else {
+                LightColorScheme
+            }
+        }
     }
 
     MaterialTheme(

@@ -24,6 +24,8 @@ import com.orbix.ui.screen.TermsAndConditionsScreen
 import com.orbix.ui.viewmodel.SignUpViewModel
 import androidx.activity.ComponentActivity
 import androidx.navigation.toRoute
+import com.orbix.ui.theme.OrbixTheme
+import com.orbix.ui.util.Roles
 
 @Composable
 fun AppNavigation() {
@@ -40,69 +42,73 @@ fun AppNavigation() {
         ).show()
     }
 
-    when (val state = sessionViewModel.sessionState) {
-        SessionState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
+    val isArrendador = Roles.isArrendador(sessionViewModel.roles)
 
-        SessionState.Unauthenticated -> {
-            val activity = LocalContext.current as ComponentActivity
-            val signUpViewModel: SignUpViewModel = viewModel(viewModelStoreOwner = activity)
-            NavHost(
-                navController = navController,
-                startDestination = Login
-            ) {
-                composable<Login> {
-                    LoginScreen(
-                        onLogin = { response -> onAuthSuccess(response, false) },
-                        onNavigateToSignUp = {
-                            signUpViewModel.clearForm()
-                            navController.navigate(SignUp)
-                        }
-                    )
-                }
-
-                composable<SignUp> {
-                    SignUpScreen(
-                        onBack = { navController.popBackStack() },
-                        onNavigateToTerms = {
-                            navController.navigate(TermsAndConditions(isSignUpFlow = true))
-                        },
-                        viewModel = signUpViewModel
-                    )
-                }
-
-                composable<TermsAndConditions> { backStackEntry ->
-                    val route: TermsAndConditions = backStackEntry.toRoute()
-                    TermsAndConditionsScreen(
-                        onBack = { navController.popBackStack() },
-                        onAccept = {
-                            navController.popBackStack()
-                        },
-                        signUpViewModel = if (route.isSignUpFlow) signUpViewModel else null,
-                        onRegisterSuccess = { response ->
-                            onAuthSuccess(response, true)
-                        }
-                    )
+    OrbixTheme(isArrendador = isArrendador) {
+        when (val state = sessionViewModel.sessionState) {
+            SessionState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
             }
-        }
 
-        is SessionState.Authenticated -> {
-            NavHost(
-                navController = navController,
-                startDestination = AuthNavigation.homeRoute(state.session.roles)
-            ) {
-                authenticatedRoutes(
+            SessionState.Unauthenticated -> {
+                val activity = LocalContext.current as ComponentActivity
+                val signUpViewModel: SignUpViewModel = viewModel(viewModelStoreOwner = activity)
+                NavHost(
                     navController = navController,
-                    session = state.session,
-                    sessionViewModel = sessionViewModel
-                )
+                    startDestination = Login
+                ) {
+                    composable<Login> {
+                        LoginScreen(
+                            onLogin = { response -> onAuthSuccess(response, false) },
+                            onNavigateToSignUp = {
+                                signUpViewModel.clearForm()
+                                navController.navigate(SignUp)
+                            }
+                        )
+                    }
+
+                    composable<SignUp> {
+                        SignUpScreen(
+                            onBack = { navController.popBackStack() },
+                            onNavigateToTerms = {
+                                navController.navigate(TermsAndConditions(isSignUpFlow = true))
+                            },
+                            viewModel = signUpViewModel
+                        )
+                    }
+
+                    composable<TermsAndConditions> { backStackEntry ->
+                        val route: TermsAndConditions = backStackEntry.toRoute()
+                        TermsAndConditionsScreen(
+                            onBack = { navController.popBackStack() },
+                            onAccept = {
+                                navController.popBackStack()
+                            },
+                            signUpViewModel = if (route.isSignUpFlow) signUpViewModel else null,
+                            onRegisterSuccess = { response ->
+                                onAuthSuccess(response, true)
+                            }
+                        )
+                    }
+                }
+            }
+
+            is SessionState.Authenticated -> {
+                NavHost(
+                    navController = navController,
+                    startDestination = AuthNavigation.homeRoute(state.session.roles)
+                ) {
+                    authenticatedRoutes(
+                        navController = navController,
+                        session = state.session,
+                        sessionViewModel = sessionViewModel
+                    )
+                }
             }
         }
     }
