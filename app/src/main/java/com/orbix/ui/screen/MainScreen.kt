@@ -8,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -56,8 +55,7 @@ fun MainScreen(
     val navItems = listOf(
         NavItem("Inicio", Icons.Default.Home, 0),
         NavItem("Reservas", Icons.Default.DateRange, 1),
-        NavItem("Notificaciones", Icons.Default.Notifications, 2),
-        NavItem("Perfil", Icons.Default.Person, 3)
+        NavItem("Perfil", Icons.Default.Person, 2)
     )
 
     var selectedItem by remember { mutableStateOf(0) }
@@ -112,17 +110,18 @@ fun MainScreen(
             when (selectedItem) {
                 0 -> HomeScreen(
                     userPermissions = userPermissions,
+                    userRoles = userRoles,
                     onNavigateToCarDetail = onNavigateToCarDetail,
                     onNavigateToNewVehicle = onNavigateToNewVehicle,
-                    onNavigateToSearch = onNavigateToSearch
+                    onNavigateToSearch = onNavigateToSearch,
+                    onNavigateToFavorites = onNavigateToFavorites
                 )
                 1 -> ReservationsScreen(
                     userRoles = userRoles,
                     onBack = { selectedItem = 0 },
                     onNavigateToCarReview = onNavigateToCarReview
                 )
-                2 -> NotificationsScreen()
-                3 -> ProfileScreen(
+                2 -> ProfileScreen(
                     userEmail = userEmail,
                     userRoles = userRoles,
                     onLogout = onLogout,

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -69,26 +70,39 @@ import com.orbix.ui.model.Vehicle
 import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.model.byCategory
 import com.orbix.ui.model.label
-import com.orbix.ui.util.Permissions
+import com.orbix.ui.util.Roles
 import com.orbix.ui.viewmodel.VehicleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     userPermissions: Set<String>,
+    userRoles: Set<String>,
     onNavigateToCarDetail: (String) -> Unit,
     onNavigateToNewVehicle: () -> Unit,
-    onNavigateToSearch: () -> Unit
+    onNavigateToSearch: () -> Unit,
+    onNavigateToFavorites: () -> Unit
 ) {
     val activity = LocalContext.current as ComponentActivity
     val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
-    val canCreateVehicle = Permissions.canCreateVehicle(userPermissions)
     var selectedCategory by remember { mutableStateOf<VehicleCategory?>(null) }
     val filteredVehicles = vm.vehicles.byCategory(selectedCategory)
 
     Scaffold(
         floatingActionButton = {
-            if (canCreateVehicle) {
+            if (Roles.isCliente(userRoles)) {
+                FloatingActionButton(
+                    onClick = onNavigateToFavorites,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = "Favoritos"
+                    )
+                }
+            } else if (Roles.isArrendador(userRoles)) {
                 FloatingActionButton(
                     onClick = onNavigateToNewVehicle,
                     containerColor = MaterialTheme.colorScheme.primary,
