@@ -110,7 +110,12 @@ fun NavGraphBuilder.authenticatedRoutes(
     }
 
     composable<Favorites> {
-        FavoritesScreen(onBack = { navController.popBackStack() })
+        FavoritesScreen(
+            onBack = { navController.popBackStack() },
+            onNavigateToCarDetail = { carId ->
+                navController.navigate(CarDetail(carId))
+            }
+        )
     }
 
     composable<IDVerification> {

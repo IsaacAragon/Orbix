@@ -13,7 +13,8 @@ data class Vehicle(
     val description: String? = null,
     val category: String? = null,
     val ownerId: Long? = null,
-    val ownerName: String? = null
+    val ownerName: String? = null,
+    val isFavorite: Boolean = false
 ) {
     val isAvailable: Boolean get() = available != false
 }
