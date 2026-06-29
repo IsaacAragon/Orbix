@@ -46,10 +46,16 @@ import com.orbix.ui.viewmodel.RentalViewModel
 @Composable
 fun RentalManagementScreen(
     onBack: () -> Unit,
+    embeddedInTab: Boolean = false,
     viewModel: RentalViewModel = viewModel()
 ) {
     LaunchedEffect(Unit) {
         viewModel.loadReceivedRentals()
+    }
+
+    if (embeddedInTab) {
+        RentalManagementContent(viewModel = viewModel)
+        return
     }
 
     Scaffold(
@@ -66,48 +72,54 @@ fun RentalManagementScreen(
             )
         }
     ) { padding ->
-        when {
-            viewModel.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+        RentalManagementContent(
+            viewModel = viewModel,
+            modifier = Modifier.padding(padding)
+        )
+    }
+}
+
+@Composable
+private fun RentalManagementContent(
+    viewModel: RentalViewModel,
+    modifier: Modifier = Modifier
+) {
+    when {
+        viewModel.isLoading -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-            viewModel.receivedRentals.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No tienes solicitudes de renta pendientes.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(24.dp)
+        }
+        viewModel.receivedRentals.isEmpty() -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No tienes solicitudes de renta pendientes.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(24.dp)
+                )
+            }
+        }
+        else -> {
+            LazyColumn(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(viewModel.receivedRentals, key = { it.id }) { rental ->
+                    HostRentalCard(
+                        rental = rental,
+                        isSubmitting = viewModel.isSubmitting,
+                        onApprove = { viewModel.approveRequest(rental.id) },
+                        onReject = { viewModel.rejectRequest(rental.id) }
                     )
-                }
-            }
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(viewModel.receivedRentals, key = { it.id }) { rental ->
-                        HostRentalCard(
-                            rental = rental,
-                            isSubmitting = viewModel.isSubmitting,
-                            onApprove = { viewModel.approveRequest(rental.id) },
-                            onReject = { viewModel.rejectRequest(rental.id) }
-                        )
-                    }
                 }
             }
         }

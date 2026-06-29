@@ -70,6 +70,7 @@ import com.orbix.ui.model.Vehicle
 import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.model.byCategory
 import com.orbix.ui.model.label
+import com.orbix.ui.util.Permissions
 import com.orbix.ui.util.Roles
 import com.orbix.ui.viewmodel.VehicleViewModel
 
@@ -85,34 +86,40 @@ fun HomeScreen(
 ) {
     val activity = LocalContext.current as ComponentActivity
     val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
+    val isArrendador = Roles.isArrendador(userRoles)
+    val isCliente = Roles.isCliente(userRoles)
+    val canCreateVehicle = Permissions.canCreateVehicle(userPermissions)
     var selectedCategory by remember { mutableStateOf<VehicleCategory?>(null) }
     val filteredVehicles = vm.vehicles.byCategory(selectedCategory)
 
     Scaffold(
         floatingActionButton = {
-            if (Roles.isCliente(userRoles)) {
-                FloatingActionButton(
-                    onClick = onNavigateToFavorites,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Favoritos"
-                    )
+            when {
+                isCliente -> {
+                    FloatingActionButton(
+                        onClick = onNavigateToFavorites,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = "Favoritos"
+                        )
+                    }
                 }
-            } else if (Roles.isArrendador(userRoles)) {
-                FloatingActionButton(
-                    onClick = onNavigateToNewVehicle,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Registrar Vehículo"
-                    )
+                canCreateVehicle -> {
+                    FloatingActionButton(
+                        onClick = onNavigateToNewVehicle,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Registrar Vehículo"
+                        )
+                    }
                 }
             }
         },
@@ -133,7 +140,34 @@ fun HomeScreen(
             ) {
                 item { HomeHeader() }
 
-                item { HomeSearchBar(onSearchClick = onNavigateToSearch) }
+                if (isArrendador) {
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Panel de arrendador",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Publica vehículos con el botón + y gestiona solicitudes en la pestaña Solicitudes.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (isCliente) {
+                    item { HomeSearchBar(onSearchClick = onNavigateToSearch) }
+                }
 
                 item {
                     HomeCategories(
@@ -144,7 +178,7 @@ fun HomeScreen(
 
                 item {
                     Text(
-                        text = "Disponibles cerca de ti",
+                        text = if (isArrendador) "Catálogo de referencia" else "Disponibles cerca de ti",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 import com.orbix.ui.navigation.NavItem
+import com.orbix.ui.util.Roles
 import com.orbix.ui.viewmodel.VehicleViewModel
 
 @Composable
@@ -42,7 +42,6 @@ fun MainScreen(
     onNavigateToNewVehicle: () -> Unit,
     onNavigateToTermsAndConditions: () -> Unit,
     onNavigateToFavorites: () -> Unit,
-    onNavigateToSignUp: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToIDVerification: () -> Unit,
     onNavigateToCarManagement: () -> Unit,
@@ -51,10 +50,15 @@ fun MainScreen(
 ) {
     val activity = LocalContext.current as ComponentActivity
     val vehicleViewModel: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
+    val isArrendador = Roles.isArrendador(userRoles)
 
     val navItems = listOf(
         NavItem("Inicio", Icons.Default.Home, 0),
-        NavItem("Reservas", Icons.Default.DateRange, 1),
+        NavItem(
+            if (isArrendador) "Solicitudes" else "Reservas",
+            Icons.Default.DateRange,
+            1
+        ),
         NavItem("Perfil", Icons.Default.Person, 2)
     )
 
@@ -77,12 +81,12 @@ fun MainScreen(
                                 selectedItem = item.index
                             }
                         },
-                        label = { 
+                        label = {
                             Text(
                                 text = item.label,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (selectedItem == item.index) FontWeight.Bold else FontWeight.Normal
-                            ) 
+                            )
                         },
                         icon = {
                             Icon(
@@ -116,11 +120,18 @@ fun MainScreen(
                     onNavigateToSearch = onNavigateToSearch,
                     onNavigateToFavorites = onNavigateToFavorites
                 )
-                1 -> ReservationsScreen(
-                    userRoles = userRoles,
-                    onBack = { selectedItem = 0 },
-                    onNavigateToCarReview = onNavigateToCarReview
-                )
+                1 -> if (isArrendador) {
+                    RentalManagementScreen(
+                        onBack = { selectedItem = 0 },
+                        embeddedInTab = true
+                    )
+                } else {
+                    ReservationsScreen(
+                        userRoles = userRoles,
+                        onBack = { selectedItem = 0 },
+                        onNavigateToCarReview = onNavigateToCarReview
+                    )
+                }
                 2 -> ProfileScreen(
                     userEmail = userEmail,
                     userRoles = userRoles,
@@ -131,7 +142,6 @@ fun MainScreen(
                     },
                     onNavigateToUserReview = { onNavigateToUserReview(2L) },
                     onNavigateToFavorites = onNavigateToFavorites,
-                    onNavigateToSignUp = onNavigateToSignUp,
                     onNavigateToIDVerification = onNavigateToIDVerification,
                     onNavigateToCarManagement = onNavigateToCarManagement,
                     onNavigateToRentalManagement = onNavigateToRentalManagement,
@@ -141,4 +151,3 @@ fun MainScreen(
         }
     }
 }
-
