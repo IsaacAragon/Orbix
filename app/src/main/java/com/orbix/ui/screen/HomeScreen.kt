@@ -48,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,6 +70,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.orbix.ui.model.Vehicle
 import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.model.byCategory
+import com.orbix.ui.model.categoryLabel
+import com.orbix.ui.model.transmissionLabel
 import com.orbix.ui.model.label
 import com.orbix.ui.util.Permissions
 import com.orbix.ui.util.Roles
@@ -91,6 +94,10 @@ fun HomeScreen(
     val canCreateVehicle = Permissions.canCreateVehicle(userPermissions)
     var selectedCategory by remember { mutableStateOf<VehicleCategory?>(null) }
     val filteredVehicles = vm.vehicles.byCategory(selectedCategory)
+
+    LaunchedEffect(Unit) {
+        vm.loadVehicles()
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -178,7 +185,7 @@ fun HomeScreen(
 
                 item {
                     Text(
-                        text = if (isArrendador) "Catálogo de referencia" else "Disponibles cerca de ti",
+                        text = if (isArrendador) "Mis publicaciones" else "Disponibles cerca de ti",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
@@ -691,7 +698,7 @@ fun VehicleCard(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "${vehicle.year.orEmpty()} • ${vehicle.transmission.label()}",
+                        text = "${vehicle.year.orEmpty()} • ${transmissionLabel(vehicle.transmission)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 0.5.sp
@@ -790,7 +797,7 @@ fun VehicleCard(
                                 style = MaterialTheme.typography.labelSmall
                             )
                             Text(
-                                text = category.label(),
+                                text = categoryLabel(category),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -813,7 +820,7 @@ fun VehicleCard(
                             style = MaterialTheme.typography.labelSmall
                         )
                         Text(
-                            text = vehicle.transmission.label(),
+                            text = transmissionLabel(vehicle.transmission),
                             fontWeight = FontWeight.Bold
                         )
                     }

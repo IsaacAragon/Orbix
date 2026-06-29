@@ -5,13 +5,15 @@ data class Vehicle(
     val brand: String,
     val model: String,
     val year: String?,
-    val transmission: Transmission,
+    val transmission: String?,
     val passengers: String?,
     val pricePerDay: Double?,
     val imageUrl: String?,
     val available: Boolean?,
-    val description: String?,
-    val category: VehicleCategory?
+    val description: String? = null,
+    val category: String? = null,
+    val ownerId: Long? = null,
+    val ownerName: String? = null
 ) {
     val isAvailable: Boolean get() = available != false
 }

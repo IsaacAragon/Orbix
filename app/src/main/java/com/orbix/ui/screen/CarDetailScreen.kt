@@ -63,8 +63,8 @@ import android.widget.Toast
 import coil.compose.AsyncImage
 
 import com.orbix.ui.model.RentalStatus
-import com.orbix.ui.model.VehicleCategory
-import com.orbix.ui.model.label
+import com.orbix.ui.model.categoryLabel
+import com.orbix.ui.model.transmissionLabel
 import com.orbix.ui.theme.WhatsappGreen
 import com.orbix.ui.util.Permissions
 import com.orbix.ui.util.Roles
@@ -88,7 +88,15 @@ fun CarDetailScreen(
     val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
     val reviewVm: ReviewViewModel = viewModel()
     val rentalVm: RentalViewModel = viewModel()
-    val vehicle = vm.vehicles.find { it.id?.toString() == carId }
+    val vehicleId = carId.toLongOrNull()
+    val detail = vm.vehicleDetail
+    val vehicle = vehicleId?.let { id ->
+        detail?.takeIf { it.id == id } ?: vm.vehicles.find { it.id == id }
+    }
+
+    LaunchedEffect(vehicleId) {
+        vehicleId?.let { vm.loadVehicleDetail(it) }
+    }
 
     LaunchedEffect(vehicle?.id) {
         vehicle?.id?.let { reviewVm.loadVehicleReviews(it) }
@@ -121,7 +129,7 @@ fun CarDetailScreen(
     } ?: "0"
     val summary = reviewVm.vehicleSummary
     val carRating = summary?.let { String.format("%.1f", it.averageRating) } ?: "—"
-    val transmission = vehicle?.transmission?.label() ?: "—"
+    val transmission = transmissionLabel(vehicle?.transmission)
     val passengers = vehicle?.passengers ?: "Hasta 5"
     val canReview = Roles.canReviewVehicle(userRoles) && vehicle?.id != null
     val canRent = Roles.isCliente(userRoles) &&
@@ -220,7 +228,7 @@ fun CarDetailScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             AssistChip(
                                 onClick = {},
-                                label = { Text(category.label()) }
+                                label = { Text(categoryLabel(category)) }
                             )
                         }
                     }
@@ -432,7 +440,7 @@ fun CarDetailScreen(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Luis Aragón",
+                                text = vehicle?.ownerName ?: "Arrendador",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface

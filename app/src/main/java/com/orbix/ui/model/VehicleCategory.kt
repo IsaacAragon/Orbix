@@ -20,5 +20,10 @@ fun VehicleCategory.label(): String = when (this) {
     VehicleCategory.LUJO -> "Lujo"
 }
 
+fun categoryLabel(value: String?): String {
+    if (value.isNullOrBlank()) return "—"
+    return runCatching { VehicleCategory.valueOf(value).label() }.getOrElse { value }
+}
+
 fun List<Vehicle>.byCategory(category: VehicleCategory?): List<Vehicle> =
-    if (category == null) this else filter { it.category == category }
+    if (category == null) this else filter { it.category == category.name }

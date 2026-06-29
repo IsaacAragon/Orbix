@@ -9,13 +9,35 @@ import com.orbix.ui.service.ApiResult
 import retrofit2.HttpException
 
 class VehicleRepository {
-    suspend fun getVehicles(): ApiResult<List<Vehicle>> {
+
+    private suspend fun ensureAuthHeader() {
+        if (ApiClient.ensureTokenLoaded().isNullOrBlank()) {
+            throw IllegalStateException("Sesión expirada. Inicia sesión de nuevo.")
+        }
+    }
+
+    /** GET /vehicles con JWT en el interceptor; el backend filtra por rol del token. */
+    suspend fun loadVehicles(): ApiResult<List<Vehicle>> {
         return try {
+            ApiClient.ensureTokenLoaded()
             ApiResult.Success(ApiClient.vehicleApi.getVehicles())
         } catch (e: HttpException) {
             when (e.code()) {
                 401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
                 403 -> ApiResult.Error("No tienes permiso para ver vehículos.")
+                else -> ApiResult.Error("Error del servidor")
+            }
+        } catch (e: Exception) {
+            ApiResult.Error(e.message ?: "Error de conexión")
+        }
+    }
+
+    suspend fun getVehicleById(id: Long): ApiResult<Vehicle> {
+        return try {
+            ApiResult.Success(ApiClient.vehicleApi.getVehicleById(id))
+        } catch (e: HttpException) {
+            when (e.code()) {
+                404 -> ApiResult.Error("Vehículo no encontrado")
                 else -> ApiResult.Error("Error del servidor")
             }
         } catch (e: Exception) {
@@ -34,6 +56,7 @@ class VehicleRepository {
         category: VehicleCategory
     ): ApiResult<Vehicle> {
         return try {
+            ensureAuthHeader()
             ApiResult.Success(
                 ApiClient.vehicleApi.create(
                     CreateVehicleRequest(
@@ -56,6 +79,8 @@ class VehicleRepository {
                 403 -> ApiResult.Error("No tienes permiso para publicar vehículos.")
                 else -> ApiResult.Error("Error del servidor")
             }
+        } catch (e: IllegalStateException) {
+            ApiResult.Error(e.message ?: "Sesión expirada. Inicia sesión de nuevo.")
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error de conexión")
         }
