@@ -4,12 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.lifecycle.lifecycleScope
 import com.orbix.ui.local.TokenStorage
 import com.orbix.ui.navigation.AppNavigation
 import com.orbix.ui.service.ApiClient
 import com.orbix.ui.theme.OrbixTheme
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,7 +16,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         ApiClient.init(applicationContext)
-        lifecycleScope.launch {
+        runBlocking {
             TokenStorage(applicationContext).syncToApiClient()
         }
 

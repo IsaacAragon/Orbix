@@ -12,8 +12,16 @@ class RentalRepository(
     private val tokenStorage: TokenStorage? = null
 ) {
     private suspend fun ensureAuthHeader() {
-        tokenStorage?.syncToApiClient()
+        val token = tokenStorage?.getToken()?.takeIf { it.isNotBlank() }
+            ?: ApiClient.getToken()?.takeIf { it.isNotBlank() }
+        if (token == null) {
+            throw IllegalStateException("Sesión expirada. Inicia sesión de nuevo.")
+        }
+        ApiClient.setToken(token)
     }
+
+    private fun <T> authError(e: IllegalStateException): ApiResult<T> =
+        ApiResult.Error(e.message ?: "Sesión expirada. Inicia sesión de nuevo.")
 
     suspend fun create(
         vehicleId: Long,
@@ -29,11 +37,13 @@ class RentalRepository(
             )
         } catch (e: HttpException) {
             when (e.code()) {
-                401 -> ApiResult.Error(parseApiError(e, "Sesión expirada. Inicia sesión de nuevo."))
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
                 403 -> ApiResult.Error(parseApiError(e, "No tienes permiso para solicitar esta renta."))
                 400 -> ApiResult.Error(parseApiError(e, "Datos inválidos para la solicitud."))
                 else -> ApiResult.Error(parseApiError(e))
             }
+        } catch (e: IllegalStateException) {
+            ApiResult.Error(e.message ?: "Sesión expirada. Inicia sesión de nuevo.")
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error de conexión")
         }
@@ -45,9 +55,11 @@ class RentalRepository(
             ApiResult.Success(ApiClient.rentalApi.myRequests())
         } catch (e: HttpException) {
             when (e.code()) {
-                401 -> ApiResult.Error(parseApiError(e, "Sesión expirada. Inicia sesión de nuevo."))
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
                 else -> ApiResult.Error(parseApiError(e))
             }
+        } catch (e: IllegalStateException) {
+            authError(e)
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error al cargar solicitudes")
         }
@@ -59,10 +71,12 @@ class RentalRepository(
             ApiResult.Success(ApiClient.rentalApi.receivedRequests())
         } catch (e: HttpException) {
             when (e.code()) {
-                401 -> ApiResult.Error(parseApiError(e, "Sesión expirada. Inicia sesión de nuevo."))
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
                 403 -> ApiResult.Error(parseApiError(e, "Solo arrendadores pueden ver solicitudes recibidas."))
                 else -> ApiResult.Error(parseApiError(e))
             }
+        } catch (e: IllegalStateException) {
+            authError(e)
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error al cargar solicitudes")
         }
@@ -74,10 +88,12 @@ class RentalRepository(
             ApiResult.Success(ApiClient.rentalApi.approve(id))
         } catch (e: HttpException) {
             when (e.code()) {
-                401 -> ApiResult.Error(parseApiError(e, "Sesión expirada. Inicia sesión de nuevo."))
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
                 400, 403 -> ApiResult.Error(parseApiError(e))
                 else -> ApiResult.Error(parseApiError(e))
             }
+        } catch (e: IllegalStateException) {
+            authError(e)
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error al aprobar solicitud")
         }
@@ -89,10 +105,12 @@ class RentalRepository(
             ApiResult.Success(ApiClient.rentalApi.reject(id))
         } catch (e: HttpException) {
             when (e.code()) {
-                401 -> ApiResult.Error(parseApiError(e, "Sesión expirada. Inicia sesión de nuevo."))
+                401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
                 400, 403 -> ApiResult.Error(parseApiError(e))
                 else -> ApiResult.Error(parseApiError(e))
             }
+        } catch (e: IllegalStateException) {
+            authError(e)
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error al rechazar solicitud")
         }

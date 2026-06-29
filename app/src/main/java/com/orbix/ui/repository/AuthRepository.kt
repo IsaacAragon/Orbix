@@ -75,6 +75,7 @@ class AuthRepository(
         return try {
             val response = ApiClient.authApi.me()
             saveSession(response)
+            tokenStorage.syncToApiClient()
             UserSession(
                 email = response.email,
                 roles = response.roles.toSet(),

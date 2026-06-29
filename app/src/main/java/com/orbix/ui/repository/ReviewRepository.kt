@@ -17,7 +17,12 @@ class ReviewRepository(
     private val tokenStorage: TokenStorage? = null
 ) {
     private suspend fun ensureAuthHeader() {
-        tokenStorage?.syncToApiClient()
+        val token = tokenStorage?.getToken()?.takeIf { it.isNotBlank() }
+            ?: ApiClient.getToken()?.takeIf { it.isNotBlank() }
+        if (token == null) {
+            throw IllegalStateException("Sesión expirada. Inicia sesión de nuevo.")
+        }
+        ApiClient.setToken(token)
     }
 
     suspend fun getVehicleReviews(vehicleId: Long): ApiResult<List<VehicleReviewResponse>> {
@@ -61,6 +66,8 @@ class ReviewRepository(
                 400 -> ApiResult.Error(parseApiError(e, "Datos inválidos o ya reseñaste este vehículo."))
                 else -> ApiResult.Error(parseApiError(e))
             }
+        } catch (e: IllegalStateException) {
+            ApiResult.Error(e.message ?: "Sesión expirada. Inicia sesión de nuevo.")
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error de conexión")
         }

@@ -33,7 +33,7 @@ class TokenStorage(private val context: Context) {
     }
 
     suspend fun syncToApiClient() {
-        ApiClient.setToken(getToken())
+        getToken()?.let { ApiClient.setToken(it) }
     }
 
     suspend fun getEmail(): String? {
@@ -50,7 +50,7 @@ class TokenStorage(private val context: Context) {
 
     suspend fun clearSession() {
         context.dataStore.edit { it.clear() }
-        ApiClient.setToken(null)
+        ApiClient.clearToken()
     }
 
     companion object {

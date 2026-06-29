@@ -12,30 +12,45 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiClient {
     private const val BASE_URL = "http://10.0.2.2:8082/api/"
 
+    private var appContext: Context? = null
     private var token: String? = null
     private var tokenStorage: TokenStorage? = null
 
     fun init(context: Context) {
+        appContext = context.applicationContext
         if (tokenStorage == null) {
             tokenStorage = TokenStorage(context.applicationContext)
         }
     }
 
     fun setToken(value: String?) {
-        token = value
+        if (!value.isNullOrBlank()) {
+            token = value
+        }
+    }
+
+    fun clearToken() {
+        token = null
     }
 
     fun getToken(): String? = token
 
+    private fun storage(): TokenStorage? {
+        tokenStorage?.let { return it }
+        return appContext?.let { ctx ->
+            TokenStorage(ctx).also { tokenStorage = it }
+        }
+    }
+
     private fun resolveToken(): String? {
         token?.takeIf { it.isNotBlank() }?.let { return it }
-        val stored = tokenStorage?.let { storage ->
+        val stored = storage()?.let { storage ->
             runBlocking { storage.getToken() }
         }
         if (!stored.isNullOrBlank()) {
             token = stored
         }
-        return stored
+        return stored ?: token
     }
 
     private val okHttpClient: OkHttpClient by lazy {
