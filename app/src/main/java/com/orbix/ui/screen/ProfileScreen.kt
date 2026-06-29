@@ -1,6 +1,7 @@
 package com.orbix.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -36,6 +38,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -43,9 +46,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,6 +66,8 @@ fun ProfileScreen(
     userEmail: String,
     userRoles: Set<String>,
     fallbackNombre: String? = null,
+    userTelefono: String? = null,
+    onPhoneUpdated: (String?) -> Unit = {},
     onLogout: () -> Unit,
     onNavigateToTermsAndConditions: () -> Unit,
     onNavigateToCarReview: () -> Unit,
@@ -79,6 +89,8 @@ fun ProfileScreen(
         ?: fallbackNombre
         ?: userEmail.substringBefore("@").replace(".", " ").replaceFirstChar { it.uppercase() }
     val displayEmail = profile?.email ?: userEmail
+    val displayTelefono = viewModel.savedTelefono ?: userTelefono
+    var phoneInput by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -135,6 +147,90 @@ fun ProfileScreen(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            Text(
+                text = displayEmail,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            displayTelefono?.takeIf { it.isNotBlank() }?.let { telefono ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = telefono,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (Roles.isArrendador(userRoles) && displayTelefono.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(
+                            text = "Agrega tu teléfono",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Los clientes podrán contactarte cuando vean tus vehículos.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = phoneInput,
+                            onValueChange = {
+                                phoneInput = it
+                                viewModel.clearPhoneError()
+                            },
+                            label = { Text("Teléfono") },
+                            leadingIcon = {
+                                Icon(Icons.Default.Phone, contentDescription = null)
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true
+                        )
+                        viewModel.phoneErrorMessage?.let { error ->
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = error,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                viewModel.updatePhone(phoneInput) { telefono ->
+                                    onPhoneUpdated(telefono)
+                                }
+                            },
+                            enabled = phoneInput.isNotBlank() && !viewModel.isUpdatingPhone,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            if (viewModel.isUpdatingPhone) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Text("Guardar teléfono", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
 
             if (viewModel.isLoading && profile == null) {
                 Spacer(modifier = Modifier.height(24.dp))

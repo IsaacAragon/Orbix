@@ -18,7 +18,8 @@ data class UserSession(
     val roles: Set<String>,
     val permissions: Set<String>,
     val userId: Long? = null,
-    val nombre: String? = null
+    val nombre: String? = null,
+    val telefono: String? = null
 )
 
 class AuthRepository(
@@ -45,6 +46,7 @@ class AuthRepository(
         email: String,
         password: String,
         nombre: String?,
+        telefono: String?,
         fechaNacimiento: String?
     ): AuthResult {
         return try {
@@ -53,6 +55,7 @@ class AuthRepository(
                     email = email.trim(),
                     password = password,
                     nombre = nombre?.trim()?.takeIf { it.isNotBlank() },
+                    telefono = telefono?.trim()?.takeIf { it.isNotBlank() },
                     fechaNacimiento = fechaNacimiento
                 )
             )
@@ -63,6 +66,24 @@ class AuthRepository(
             AuthResult.Error(parseApiError(e, "No se pudo crear la cuenta"))
         } catch (e: Exception) {
             AuthResult.Error("Error de conexión. Verifica que el backend esté activo.")
+        }
+    }
+
+    suspend fun updatePhone(telefono: String): AuthResult {
+        return try {
+            if (ApiClient.ensureTokenLoaded().isNullOrBlank()) {
+                return AuthResult.Error("Sesión expirada. Inicia sesión de nuevo.")
+            }
+            val response = ApiClient.authApi.updatePhone(
+                com.orbix.ui.model.UpdatePhoneRequest(telefono.trim())
+            )
+            saveSession(response)
+            tokenStorage.syncToApiClient()
+            AuthResult.Success(response)
+        } catch (e: HttpException) {
+            AuthResult.Error(parseApiError(e, "No se pudo actualizar el teléfono"))
+        } catch (e: Exception) {
+            AuthResult.Error(e.message ?: "Error de conexión")
         }
     }
 
@@ -83,7 +104,8 @@ class AuthRepository(
                 roles = response.roles.toSet(),
                 permissions = response.permissions.toSet(),
                 userId = response.userId,
-                nombre = response.nombre
+                nombre = response.nombre,
+                telefono = response.telefono
             )
         } catch (e: HttpException) {
             if (e.code() == 401 && tokenStorage.getToken() == tokenAtStart) {
@@ -100,7 +122,8 @@ class AuthRepository(
                     roles = tokenStorage.getRoles(),
                     permissions = tokenStorage.getPermissions(),
                     userId = tokenStorage.getUserId(),
-                    nombre = tokenStorage.getNombre()
+                    nombre = tokenStorage.getNombre(),
+                    telefono = tokenStorage.getTelefono()
                 )
             } else {
                 null

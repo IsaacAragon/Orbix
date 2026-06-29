@@ -29,9 +29,10 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
         password: String,
         confirmPassword: String,
         fechaNacimiento: String?,
+        telefono: String?,
         onSuccess: (AuthResponse) -> Unit
     ) {
-        validateRegister(email, password, confirmPassword, fechaNacimiento)?.let {
+        validateRegister(email, password, confirmPassword, fechaNacimiento, telefono)?.let {
             errorMessage = it
             return
         }
@@ -45,6 +46,7 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
                     email = email,
                     password = password,
                     nombre = nombre,
+                    telefono = telefono,
                     fechaNacimiento = fechaNacimiento
                 )
             ) {

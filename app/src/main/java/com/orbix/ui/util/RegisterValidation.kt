@@ -4,15 +4,22 @@ import android.util.Patterns
 import java.util.Calendar
 import java.util.Locale
 
+fun isArrendadorEmail(email: String): Boolean =
+    email.trim().lowercase().endsWith("@orbix.com")
+
 fun validateRegister(
     email: String,
     password: String,
     confirmPassword: String,
-    fechaNacimiento: String?
+    fechaNacimiento: String?,
+    telefono: String? = null
 ): String? {
     if (email.isBlank()) return "El correo es obligatorio"
     if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
         return "El correo no es válido"
+    }
+    if (isArrendadorEmail(email) && telefono.isNullOrBlank()) {
+        return "El teléfono es obligatorio para arrendadores"
     }
     if (password.length < 6) {
         return "La contraseña debe tener al menos 6 caracteres y contener al menos una letra"

@@ -36,6 +36,8 @@ fun MainScreen(
     userPermissions: Set<String>,
     userRoles: Set<String>,
     userNombre: String? = null,
+    userTelefono: String? = null,
+    onPhoneUpdated: (String?) -> Unit = {},
     onLogout: () -> Unit,
     onNavigateToCarReview: (Long) -> Unit,
     onNavigateToUserReview: (Long, String?) -> Unit,
@@ -137,6 +139,8 @@ fun MainScreen(
                     userEmail = userEmail,
                     userRoles = userRoles,
                     fallbackNombre = userNombre,
+                    userTelefono = userTelefono,
+                    onPhoneUpdated = onPhoneUpdated,
                     onLogout = onLogout,
                     onNavigateToTermsAndConditions = onNavigateToTermsAndConditions,
                     onNavigateToCarReview = {

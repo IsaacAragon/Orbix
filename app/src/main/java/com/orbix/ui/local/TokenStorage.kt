@@ -25,6 +25,7 @@ class TokenStorage(private val context: Context) {
             prefs[KEY_PERMISSIONS] = response.permissions.toSet()
             response.userId?.let { prefs[KEY_USER_ID] = it }
             response.nombre?.takeIf { it.isNotBlank() }?.let { prefs[KEY_NOMBRE] = it }
+            response.telefono?.takeIf { it.isNotBlank() }?.let { prefs[KEY_TELEFONO] = it }
         }
         response.token?.takeIf { it.isNotBlank() }?.let { ApiClient.setToken(it) }
     }
@@ -61,8 +62,22 @@ class TokenStorage(private val context: Context) {
         return context.dataStore.data.map { it[KEY_USER_ID] }.first()
     }
 
+    suspend fun saveTelefono(telefono: String?) {
+        context.dataStore.edit { prefs ->
+            if (telefono.isNullOrBlank()) {
+                prefs.remove(KEY_TELEFONO)
+            } else {
+                prefs[KEY_TELEFONO] = telefono
+            }
+        }
+    }
+
     suspend fun getNombre(): String? {
         return context.dataStore.data.map { it[KEY_NOMBRE] }.first()
+    }
+
+    suspend fun getTelefono(): String? {
+        return context.dataStore.data.map { it[KEY_TELEFONO] }.first()
     }
 
     suspend fun clearSession() {
@@ -77,5 +92,6 @@ class TokenStorage(private val context: Context) {
         private val KEY_PERMISSIONS = stringSetPreferencesKey("permissions")
         private val KEY_USER_ID = longPreferencesKey("user_id")
         private val KEY_NOMBRE = stringPreferencesKey("nombre")
+        private val KEY_TELEFONO = stringPreferencesKey("telefono")
     }
 }
