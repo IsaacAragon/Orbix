@@ -30,6 +30,7 @@ class NewVehicleViewModel : ViewModel() {
         pricePerDay: String,
         description: String,
         category: VehicleCategory?,
+        imageUrl: String?,
         onSuccess: () -> Unit
     ) {
         val price = pricePerDay.toDoubleOrNull()
@@ -65,7 +66,8 @@ class NewVehicleViewModel : ViewModel() {
                     passengers = passengers,
                     pricePerDay = price,
                     description = description,
-                    category = category
+                    category = category,
+                    imageUrl = imageUrl.takeIf { it?.isNotBlank() == true }
                 )
             ) {
                 is ApiResult.Success -> onSuccess()

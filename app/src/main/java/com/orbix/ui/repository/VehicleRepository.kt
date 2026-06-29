@@ -53,7 +53,8 @@ class VehicleRepository {
         passengers: String,
         pricePerDay: Double,
         description: String,
-        category: VehicleCategory
+        category: VehicleCategory,
+        imageUrl: String? = null
     ): ApiResult<Vehicle> {
         return try {
             ensureAuthHeader()
@@ -66,7 +67,7 @@ class VehicleRepository {
                         transmission = transmission,
                         passengers = passengers,
                         pricePerDay = pricePerDay,
-                        imageUrl = null,
+                        imageUrl = imageUrl,
                         available = true,
                         description = description,
                         category = category

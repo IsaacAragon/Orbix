@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -75,6 +76,7 @@ fun NewVehicleScreen(
     var seats by remember { mutableStateOf("") }
     var selectedTransmission by remember { mutableStateOf<Transmission?>(null) }
     var description by remember { mutableStateOf("") }
+    var imageUrl by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<VehicleCategory?>(null) }
     var categoryExpanded by remember { mutableStateOf(false) }
 
@@ -261,6 +263,19 @@ fun NewVehicleScreen(
             )
 
             OutlinedTextField(
+                leadingIcon = { Icon(Icons.Default.Image, contentDescription = null) },
+                value = imageUrl,
+                onValueChange = {
+                    imageUrl = it
+                    viewModel.clearError()
+                },
+                label = { Text("URL de la imagen (Opcional)") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
+            )
+
+            OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Description, contentDescription = null) },
                 value = description,
                 onValueChange = {
@@ -293,7 +308,8 @@ fun NewVehicleScreen(
                         passengers = seats,
                         pricePerDay = price,
                         description = description,
-                        category = selectedCategory
+                        category = selectedCategory,
+                        imageUrl = imageUrl
                     ) {
                         listViewModel.loadVehicles()
                         onVehicleAdded()
