@@ -1,8 +1,8 @@
 package com.orbix.ui.service
 
 import com.orbix.ui.model.AllReviewTagsResponse
+import com.orbix.ui.model.CreateReviewBody
 import com.orbix.ui.model.CreateUserReviewRequest
-import com.orbix.ui.model.CreateVehicleReviewBody
 import com.orbix.ui.model.ReviewTagsResponse
 import com.orbix.ui.model.UserReviewResponse
 import com.orbix.ui.model.UserReviewSummary
@@ -16,10 +16,16 @@ import retrofit2.http.Query
 
 interface ReviewApi {
     @POST("reviews/from-client/{vehiculoId}")
-    suspend fun createVehicleReview(
+    suspend fun reviewVehicle(
         @Path("vehiculoId") vehiculoId: Long,
-        @Body body: CreateVehicleReviewBody
+        @Body body: CreateReviewBody
     ): VehicleReviewResponse
+
+    @POST("reviews/from-arrendador/{clienteId}")
+    suspend fun reviewCliente(
+        @Path("clienteId") clienteId: Long,
+        @Body body: CreateReviewBody
+    ): UserReviewResponse
 
     @GET("reviews/list/{vehicleId}")
     suspend fun getVehicleReviews(@Path("vehicleId") vehicleId: Long): List<VehicleReviewResponse>

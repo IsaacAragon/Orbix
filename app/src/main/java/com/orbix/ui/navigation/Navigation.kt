@@ -30,7 +30,7 @@ object SignUp
 data class CarReview(val vehicleId: Long)
 
 @Serializable
-data class UserReview(val reviewedUserId: Long)
+data class UserReview(val reviewedUserId: Long, val targetName: String? = null)
 
 @Serializable
 object Favorites

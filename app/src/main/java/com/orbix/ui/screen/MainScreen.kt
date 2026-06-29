@@ -37,7 +37,7 @@ fun MainScreen(
     userRoles: Set<String>,
     onLogout: () -> Unit,
     onNavigateToCarReview: (Long) -> Unit,
-    onNavigateToUserReview: (Long) -> Unit,
+    onNavigateToUserReview: (Long, String?) -> Unit,
     onNavigateToCarDetail: (String) -> Unit,
     onNavigateToNewVehicle: () -> Unit,
     onNavigateToTermsAndConditions: () -> Unit,
@@ -122,7 +122,8 @@ fun MainScreen(
                 1 -> if (isArrendador) {
                     RentalManagementScreen(
                         onBack = { selectedItem = 0 },
-                        embeddedInTab = true
+                        embeddedInTab = true,
+                        onNavigateToUserReview = onNavigateToUserReview
                     )
                 } else {
                     ReservationsScreen(
@@ -139,7 +140,7 @@ fun MainScreen(
                     onNavigateToCarReview = {
                         vehicleViewModel.vehicles.firstOrNull()?.id?.let(onNavigateToCarReview)
                     },
-                    onNavigateToUserReview = { onNavigateToUserReview(2L) },
+                    onNavigateToUserReview = { onNavigateToUserReview(2L, null) },
                     onNavigateToFavorites = onNavigateToFavorites,
                     onNavigateToIDVerification = onNavigateToIDVerification,
                     onNavigateToCarManagement = onNavigateToCarManagement,

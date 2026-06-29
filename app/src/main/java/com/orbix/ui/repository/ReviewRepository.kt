@@ -1,8 +1,8 @@
 package com.orbix.ui.repository
 
 import com.orbix.ui.model.AllReviewTagsResponse
+import com.orbix.ui.model.CreateReviewBody
 import com.orbix.ui.model.CreateUserReviewRequest
-import com.orbix.ui.model.CreateVehicleReviewBody
 import com.orbix.ui.model.UserReviewResponse
 import com.orbix.ui.model.UserReviewSummary
 import com.orbix.ui.model.VehicleReviewResponse
@@ -44,11 +44,11 @@ class ReviewRepository {
         return try {
             ensureAuthHeader()
             ApiResult.Success(
-                ApiClient.reviewApi.createVehicleReview(
+                ApiClient.reviewApi.reviewVehicle(
                     vehiculoId = vehicleId,
-                    body = CreateVehicleReviewBody(
+                    body = CreateReviewBody(
                         rating = rating,
-                        tags = tags,
+                        tags = tags.ifEmpty { null },
                         comment = comment?.ifBlank { null }
                     )
                 )
@@ -83,8 +83,8 @@ class ReviewRepository {
         }
     }
 
-    suspend fun createUserReview(
-        reviewedUserId: Long,
+    suspend fun reviewCliente(
+        clienteId: Long,
         rating: Int,
         tags: List<String>,
         comment: String?
@@ -92,17 +92,24 @@ class ReviewRepository {
         return try {
             ensureAuthHeader()
             ApiResult.Success(
-                ApiClient.reviewApi.createUserReview(
-                    CreateUserReviewRequest(reviewedUserId, rating, tags, comment?.ifBlank { null })
+                ApiClient.reviewApi.reviewCliente(
+                    clienteId = clienteId,
+                    body = CreateReviewBody(
+                        rating = rating,
+                        tags = tags.ifEmpty { null },
+                        comment = comment?.ifBlank { null }
+                    )
                 )
             )
         } catch (e: HttpException) {
             when (e.code()) {
                 401 -> ApiResult.Error(parseApiError(e, "Sesión expirada. Inicia sesión de nuevo."))
-                403 -> ApiResult.Error(parseApiError(e, "No tienes permiso para reseñar a este usuario."))
-                400 -> ApiResult.Error(parseApiError(e, "Datos inválidos o ya reseñaste a este usuario."))
+                403 -> ApiResult.Error(parseApiError(e, "No tienes permiso para reseñar a este cliente."))
+                400 -> ApiResult.Error(parseApiError(e, "Datos inválidos o ya reseñaste a este cliente."))
                 else -> ApiResult.Error(parseApiError(e))
             }
+        } catch (e: IllegalStateException) {
+            ApiResult.Error(e.message ?: "Sesión expirada. Inicia sesión de nuevo.")
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error de conexión")
         }

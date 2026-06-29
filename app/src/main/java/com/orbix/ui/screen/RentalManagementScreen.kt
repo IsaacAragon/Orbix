@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -57,6 +58,7 @@ import com.orbix.ui.viewmodel.RentalViewModel
 fun RentalManagementScreen(
     onBack: () -> Unit,
     embeddedInTab: Boolean = false,
+    onNavigateToUserReview: (Long, String?) -> Unit = { _, _ -> },
     viewModel: RentalViewModel = viewModel()
 ) {
     LaunchedEffect(Unit) {
@@ -64,7 +66,10 @@ fun RentalManagementScreen(
     }
 
     if (embeddedInTab) {
-        RentalManagementContent(viewModel = viewModel)
+        RentalManagementContent(
+            viewModel = viewModel,
+            onNavigateToUserReview = onNavigateToUserReview
+        )
         return
     }
 
@@ -84,6 +89,7 @@ fun RentalManagementScreen(
     ) { padding ->
         RentalManagementContent(
             viewModel = viewModel,
+            onNavigateToUserReview = onNavigateToUserReview,
             modifier = Modifier.padding(padding)
         )
     }
@@ -92,6 +98,7 @@ fun RentalManagementScreen(
 @Composable
 private fun RentalManagementContent(
     viewModel: RentalViewModel,
+    onNavigateToUserReview: (Long, String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when {
@@ -129,7 +136,10 @@ private fun RentalManagementContent(
                         rental = rental,
                         isSubmitting = viewModel.isSubmitting,
                         onApprove = { viewModel.approveRequest(rental.id) },
-                        onReject = { viewModel.rejectRequest(rental.id) }
+                        onReject = { viewModel.rejectRequest(rental.id) },
+                        onReviewCliente = {
+                            onNavigateToUserReview(rental.clienteId, rental.clienteNombre)
+                        }
                     )
                 }
                 item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -143,7 +153,8 @@ private fun HostRentalCard(
     rental: RentalResponse,
     isSubmitting: Boolean,
     onApprove: () -> Unit,
-    onReject: () -> Unit
+    onReject: () -> Unit,
+    onReviewCliente: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -296,6 +307,23 @@ private fun HostRentalCard(
                             Spacer(Modifier.width(8.dp))
                             Text("Rechazar", fontWeight = FontWeight.Bold)
                         }
+                    }
+                }
+
+                if (rental.canReviewCliente || rental.clienteAlreadyReviewed) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = onReviewCliente,
+                        enabled = rental.canReviewCliente && !isSubmitting,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Star, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (rental.clienteAlreadyReviewed) "Ya calificaste" else "Calificar cliente",
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
