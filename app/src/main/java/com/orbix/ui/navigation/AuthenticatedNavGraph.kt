@@ -56,6 +56,7 @@ fun NavGraphBuilder.authenticatedRoutes(
     composable<NewVehicle> {
         val context = LocalContext.current
         NewVehicleScreen(
+            userRoles = session.roles,
             onBack = { navController.popBackStack() },
             onVehicleAdded = {
                 Toast.makeText(context, "Vehículo publicado", Toast.LENGTH_SHORT).show()

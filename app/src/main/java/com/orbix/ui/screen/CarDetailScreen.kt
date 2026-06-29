@@ -88,7 +88,15 @@ fun CarDetailScreen(
     val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
     val reviewVm: ReviewViewModel = viewModel()
     val rentalVm: RentalViewModel = viewModel()
-    val vehicle = vm.vehicles.find { it.id?.toString() == carId }
+    val vehicleId = carId.toLongOrNull()
+    val detail = vm.vehicleDetail
+    val vehicle = vehicleId?.let { id ->
+        detail?.takeIf { it.id == id } ?: vm.vehicles.find { it.id == id }
+    }
+
+    LaunchedEffect(vehicleId) {
+        vehicleId?.let { vm.loadVehicleDetail(it) }
+    }
 
     LaunchedEffect(vehicle?.id) {
         vehicle?.id?.let { reviewVm.loadVehicleReviews(it) }
@@ -432,7 +440,7 @@ fun CarDetailScreen(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Luis Aragón",
+                                text = vehicle?.ownerName ?: "Arrendador",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface

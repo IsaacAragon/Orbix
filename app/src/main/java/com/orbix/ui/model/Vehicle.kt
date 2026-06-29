@@ -11,7 +11,9 @@ data class Vehicle(
     val imageUrl: String?,
     val available: Boolean?,
     val description: String?,
-    val category: VehicleCategory?
+    val category: VehicleCategory?,
+    val ownerId: Long? = null,
+    val ownerName: String? = null
 ) {
     val isAvailable: Boolean get() = available != false
 }

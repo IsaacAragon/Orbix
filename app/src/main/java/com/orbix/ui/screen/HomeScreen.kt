@@ -48,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,6 +93,10 @@ fun HomeScreen(
     var selectedCategory by remember { mutableStateOf<VehicleCategory?>(null) }
     val filteredVehicles = vm.vehicles.byCategory(selectedCategory)
 
+    LaunchedEffect(userRoles) {
+        vm.loadVehicles(userRoles)
+    }
+
     Scaffold(
         floatingActionButton = {
             when {
@@ -127,7 +132,7 @@ fun HomeScreen(
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = vm.isRefreshing,
-            onRefresh = { vm.loadVehicles() },
+            onRefresh = { vm.loadVehicles(userRoles) },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -178,7 +183,7 @@ fun HomeScreen(
 
                 item {
                     Text(
-                        text = if (isArrendador) "Catálogo de referencia" else "Disponibles cerca de ti",
+                        text = if (isArrendador) "Mis publicaciones" else "Disponibles cerca de ti",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
