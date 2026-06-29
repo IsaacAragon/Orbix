@@ -26,11 +26,11 @@ class VehicleViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    fun loadVehicles(roles: Collection<String>) {
+    fun loadVehicles() {
         viewModelScope.launch {
             isRefreshing = true
             errorMessage = null
-            when (val result = repository.loadVehicles(roles)) {
+            when (val result = repository.loadVehicles()) {
                 is ApiResult.Success -> vehicles = result.data
                 is ApiResult.Error -> errorMessage = result.message
             }

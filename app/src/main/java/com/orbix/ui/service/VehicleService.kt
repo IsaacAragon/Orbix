@@ -9,7 +9,7 @@ import retrofit2.http.Path
 
 interface VehicleService {
     @GET("vehicles")
-    suspend fun getAllVehicles(): List<Vehicle>
+    suspend fun getVehicles(): List<Vehicle>
 
     @GET("vehicles/mine")
     suspend fun getMyVehicles(): List<Vehicle>

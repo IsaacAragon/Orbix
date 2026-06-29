@@ -61,7 +61,6 @@ import com.orbix.ui.viewmodel.VehicleViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewVehicleScreen(
-    userRoles: Set<String>,
     onBack: () -> Unit,
     onVehicleAdded: () -> Unit,
     viewModel: NewVehicleViewModel = viewModel()
@@ -296,7 +295,7 @@ fun NewVehicleScreen(
                         description = description,
                         category = selectedCategory
                     ) {
-                        listViewModel.loadVehicles(userRoles)
+                        listViewModel.loadVehicles()
                         onVehicleAdded()
                     }
                 },

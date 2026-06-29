@@ -6,7 +6,6 @@ import com.orbix.ui.model.Transmission
 import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.service.ApiClient
 import com.orbix.ui.service.ApiResult
-import com.orbix.ui.util.Roles
 import retrofit2.HttpException
 
 class VehicleRepository {
@@ -17,23 +16,17 @@ class VehicleRepository {
         }
     }
 
-    suspend fun loadVehicles(roles: Collection<String>): ApiResult<List<Vehicle>> {
+    /** GET /vehicles con JWT en el interceptor; el backend filtra por rol del token. */
+    suspend fun loadVehicles(): ApiResult<List<Vehicle>> {
         return try {
-            val vehicles = if (Roles.isArrendador(roles.toSet())) {
-                ensureAuthHeader()
-                ApiClient.vehicleApi.getMyVehicles()
-            } else {
-                ApiClient.vehicleApi.getAllVehicles()
-            }
-            ApiResult.Success(vehicles)
+            ApiClient.ensureTokenLoaded()
+            ApiResult.Success(ApiClient.vehicleApi.getVehicles())
         } catch (e: HttpException) {
             when (e.code()) {
                 401 -> ApiResult.Error("Sesión expirada. Inicia sesión de nuevo.")
                 403 -> ApiResult.Error("No tienes permiso para ver vehículos.")
                 else -> ApiResult.Error("Error del servidor")
             }
-        } catch (e: IllegalStateException) {
-            ApiResult.Error(e.message ?: "Sesión expirada. Inicia sesión de nuevo.")
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Error de conexión")
         }

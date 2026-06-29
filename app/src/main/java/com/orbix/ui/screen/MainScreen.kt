@@ -76,7 +76,7 @@ fun MainScreen(
                         selected = selectedItem == item.index,
                         onClick = {
                             if (selectedItem == 0 && item.index == 0) {
-                                vehicleViewModel.loadVehicles(userRoles)
+                                vehicleViewModel.loadVehicles()
                             } else {
                                 selectedItem = item.index
                             }

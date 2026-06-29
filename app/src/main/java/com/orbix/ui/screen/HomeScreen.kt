@@ -70,6 +70,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.orbix.ui.model.Vehicle
 import com.orbix.ui.model.VehicleCategory
 import com.orbix.ui.model.byCategory
+import com.orbix.ui.model.categoryLabel
+import com.orbix.ui.model.transmissionLabel
 import com.orbix.ui.model.label
 import com.orbix.ui.util.Permissions
 import com.orbix.ui.util.Roles
@@ -93,8 +95,8 @@ fun HomeScreen(
     var selectedCategory by remember { mutableStateOf<VehicleCategory?>(null) }
     val filteredVehicles = vm.vehicles.byCategory(selectedCategory)
 
-    LaunchedEffect(userRoles) {
-        vm.loadVehicles(userRoles)
+    LaunchedEffect(Unit) {
+        vm.loadVehicles()
     }
 
     Scaffold(
@@ -132,7 +134,7 @@ fun HomeScreen(
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = vm.isRefreshing,
-            onRefresh = { vm.loadVehicles(userRoles) },
+            onRefresh = { vm.loadVehicles() },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -696,7 +698,7 @@ fun VehicleCard(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "${vehicle.year.orEmpty()} • ${vehicle.transmission.label()}",
+                        text = "${vehicle.year.orEmpty()} • ${transmissionLabel(vehicle.transmission)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         letterSpacing = 0.5.sp
@@ -795,7 +797,7 @@ fun VehicleCard(
                                 style = MaterialTheme.typography.labelSmall
                             )
                             Text(
-                                text = category.label(),
+                                text = categoryLabel(category),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -818,7 +820,7 @@ fun VehicleCard(
                             style = MaterialTheme.typography.labelSmall
                         )
                         Text(
-                            text = vehicle.transmission.label(),
+                            text = transmissionLabel(vehicle.transmission),
                             fontWeight = FontWeight.Bold
                         )
                     }
