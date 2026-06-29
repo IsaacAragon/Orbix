@@ -1,10 +1,17 @@
 package com.orbix.ui.model
 
-data class CreateVehicleReviewBody(
+enum class ReviewType {
+    VEHICLE,
+    USER
+}
+
+data class CreateReviewBody(
     val rating: Int,
-    val tags: List<String>,
+    val tags: List<String>?,
     val comment: String?
 )
+
+typealias CreateVehicleReviewBody = CreateReviewBody
 
 data class VehicleReviewResponse(
     val id: Long,
@@ -39,7 +46,7 @@ data class CreateUserReviewRequest(
 data class UserReviewResponse(
     val id: Long,
     val rating: Int,
-    val tags: List<String>,
+    val tags: List<String>?,
     val comment: String?,
     val reviewerId: Long,
     val reviewerName: String,

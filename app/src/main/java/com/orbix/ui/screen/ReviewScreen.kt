@@ -63,6 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.orbix.ui.model.ReviewType
 import com.orbix.ui.viewmodel.ReviewViewModel
 import com.orbix.ui.viewmodel.VehicleViewModel
 
@@ -78,7 +79,7 @@ fun CarReviewScreen(
     val vehicle = vehicleViewModel?.vehicles?.find { it.id == vehicleId }
 
     LaunchedEffect(Unit) {
-        viewModel.setReviewType(ReviewViewModel.TYPE_VEHICLE)
+        viewModel.setReviewType(ReviewType.VEHICLE)
         viewModel.loadAllTags()
     }
 
@@ -100,175 +101,32 @@ fun CarReviewScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserReviewScreen(
     reviewedUserId: Long,
+    targetName: String? = null,
     onBack: () -> Unit,
     onReviewSubmitted: () -> Unit,
     viewModel: ReviewViewModel = viewModel()
 ) {
+    val displayName = targetName?.takeIf { it.isNotBlank() } ?: "el cliente"
+
     LaunchedEffect(reviewedUserId) {
-        viewModel.setReviewType(ReviewViewModel.TYPE_USER)
+        viewModel.setReviewType(ReviewType.USER)
         viewModel.loadAllTags()
-        viewModel.loadUserReviews(reviewedUserId)
     }
 
-    val summary = viewModel.userSummary
-    var rating by remember { mutableIntStateOf(5) }
-    var comment by remember { mutableStateOf("") }
-    val scrollState = rememberScrollState()
-
-    val availableTags by viewModel.availableTags.collectAsState()
-    val selectedTags by viewModel.selectedTags.collectAsState()
-
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Reseña",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Regresar")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = summary?.nombre ?: "Cliente",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-
-                if (summary != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.tertiary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = String.format("%.1f", summary.averageRating),
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = " · ${summary.sentimentLabel}",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    summary.memberSinceYear?.let { year ->
-                        Text(
-                            text = "En Orbix desde $year",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                ReviewFormCard(
-                    rating = rating,
-                    onRatingChange = { newRating ->
-                        rating = newRating
-                        viewModel.onRatingChanged(newRating)
-                        viewModel.clearError()
-                    },
-                    availableTags = availableTags,
-                    selectedTags = selectedTags,
-                    isLoadingTags = viewModel.isLoadingTags,
-                    onTagToggle = {
-                        viewModel.toggleTag(it)
-                        viewModel.clearError()
-                    },
-                    comment = comment,
-                    onCommentChange = {
-                        comment = it
-                        viewModel.clearError()
-                    },
-                    errorMessage = viewModel.errorMessage
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 24.dp)
-            ) {
-                Button(
-                    onClick = {
-                        viewModel.submitUserReview(
-                            reviewedUserId,
-                            rating,
-                            comment,
-                            onReviewSubmitted
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    enabled = rating > 0 && !viewModel.isSubmitting
-                ) {
-                    if (viewModel.isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
-                        Text("Enviar reseña", fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
+    ReviewFormScreen(
+        title = "Califica al Cliente",
+        subtitle = "¡Cuéntanos cómo fue tu experiencia con $displayName!",
+        icon = Icons.Default.Person,
+        buttonText = "Enviar Reseña",
+        viewModel = viewModel,
+        onBack = onBack,
+        onSubmit = { rating, comment ->
+            viewModel.submitUserReview(reviewedUserId, rating, comment, onReviewSubmitted)
         }
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -289,6 +147,7 @@ private fun ReviewFormScreen(
 
     val availableTags by viewModel.availableTags.collectAsState()
     val selectedTags by viewModel.selectedTags.collectAsState()
+    val tagsTitle by viewModel.tagsTitle.collectAsState()
 
     Scaffold(
         topBar = {
@@ -380,6 +239,7 @@ private fun ReviewFormScreen(
                     },
                     availableTags = availableTags,
                     selectedTags = selectedTags,
+                    tagsTitle = tagsTitle,
                     isLoadingTags = viewModel.isLoadingTags,
                     onTagToggle = {
                         viewModel.toggleTag(it)
@@ -430,6 +290,7 @@ private fun ReviewFormCard(
     onRatingChange: (Int) -> Unit,
     availableTags: List<com.orbix.ui.model.ReviewTagOption>,
     selectedTags: Set<String>,
+    tagsTitle: String?,
     isLoadingTags: Boolean,
     onTagToggle: (String) -> Unit,
     comment: String,
@@ -496,7 +357,8 @@ private fun ReviewFormCard(
                         ReviewTagsSection(
                             tags = availableTags,
                             selected = selectedTags,
-                            onToggle = onTagToggle
+                            onToggle = onTagToggle,
+                            title = tagsTitle ?: "¿Qué destacó?"
                         )
                     }
 

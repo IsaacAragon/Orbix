@@ -7,12 +7,15 @@ data class ReviewTagOption(
 
 data class AllReviewTagsResponse(
     val vehicle: Map<Int, List<ReviewTagOption>>,
-    val user: Map<Int, List<ReviewTagOption>>
+    val user: Map<Int, List<ReviewTagOption>>,
+    val vehicleTitles: Map<Int, String>,
+    val userTitles: Map<Int, String>
 )
 
 data class ReviewTagsResponse(
     val rating: Int,
     val type: String,
+    val title: String,
     val tags: List<ReviewTagOption>
 )
 

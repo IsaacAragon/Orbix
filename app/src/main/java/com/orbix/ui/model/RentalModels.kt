@@ -32,5 +32,7 @@ data class RentalResponse(
     val estado: RentalStatus,
     val fechaSolicitud: String,
     val totalDias: Long,
-    val totalPrecio: Double
+    val totalPrecio: Double,
+    val canReviewCliente: Boolean = false,
+    val clienteAlreadyReviewed: Boolean = false
 )

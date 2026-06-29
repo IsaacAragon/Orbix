@@ -53,13 +53,14 @@ fun ReviewTagsSection(
     tags: List<ReviewTagOption>,
     selected: Set<String>,
     onToggle: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    title: String = "¿Qué destacó?"
 ) {
     if (tags.isEmpty()) return
 
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "¿Qué destacó?",
+            text = title,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold
         )

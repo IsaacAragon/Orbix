@@ -24,6 +24,9 @@ import com.orbix.ui.screen.ReviewSelectionScreen
 import com.orbix.ui.screen.SearchScreen
 import com.orbix.ui.screen.TermsAndConditionsScreen
 import com.orbix.ui.screen.UserReviewScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.orbix.ui.viewmodel.RentalViewModel
+import com.orbix.ui.viewmodel.ReviewViewModel
 import com.orbix.ui.viewmodel.SessionViewModel
 
 fun NavGraphBuilder.authenticatedRoutes(
@@ -78,19 +81,31 @@ fun NavGraphBuilder.authenticatedRoutes(
 
     composable<CarReview> { backStackEntry ->
         val route: CarReview = backStackEntry.toRoute()
+        val activity = LocalContext.current as? androidx.activity.ComponentActivity
+        val reviewViewModel: ReviewViewModel? = activity?.let { viewModel(viewModelStoreOwner = it) }
         CarReviewScreen(
             vehicleId = route.vehicleId,
             onBack = { navController.popBackStack() },
-            onReviewSubmitted = { navController.popBackStack() }
+            onReviewSubmitted = {
+                reviewViewModel?.loadVehicleReviews(route.vehicleId)
+                navController.popBackStack()
+            },
+            viewModel = reviewViewModel ?: viewModel()
         )
     }
 
     composable<UserReview> { backStackEntry ->
         val route: UserReview = backStackEntry.toRoute()
+        val activity = LocalContext.current as? androidx.activity.ComponentActivity
+        val rentalViewModel: RentalViewModel? = activity?.let { viewModel(viewModelStoreOwner = it) }
         UserReviewScreen(
             reviewedUserId = route.reviewedUserId,
+            targetName = route.targetName,
             onBack = { navController.popBackStack() },
-            onReviewSubmitted = { navController.popBackStack() }
+            onReviewSubmitted = {
+                rentalViewModel?.loadReceivedRentals()
+                navController.popBackStack()
+            }
         )
     }
 
@@ -147,7 +162,7 @@ fun NavGraphBuilder.authenticatedRoutes(
     composable<ReviewSelection> {
         ReviewSelectionScreen(
             onNavigateToCarReview = { navController.navigate(CarReview(2L)) },
-            onNavigateToUserReview = { navController.navigate(UserReview(2L)) }
+            onNavigateToUserReview = { navController.navigate(UserReview(2L, null)) }
         )
     }
 }
@@ -166,8 +181,8 @@ private fun AuthenticatedMainScreen(
         onNavigateToCarReview = { vehicleId ->
             navController.navigate(CarReview(vehicleId))
         },
-        onNavigateToUserReview = { userId ->
-            navController.navigate(UserReview(userId))
+        onNavigateToUserReview = { userId, targetName ->
+            navController.navigate(UserReview(userId, targetName))
         },
         onNavigateToCarDetail = { carId ->
             navController.navigate(CarDetail(carId))

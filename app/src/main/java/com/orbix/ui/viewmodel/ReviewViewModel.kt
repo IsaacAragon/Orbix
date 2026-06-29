@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.orbix.ui.model.AllReviewTagsResponse
 import com.orbix.ui.model.ReviewTagOption
+import com.orbix.ui.model.ReviewType
 import com.orbix.ui.model.UserReviewResponse
 import com.orbix.ui.model.UserReviewSummary
 import com.orbix.ui.model.VehicleReviewResponse
@@ -51,15 +52,27 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
     private val _selectedTags = MutableStateFlow<Set<String>>(emptySet())
     val selectedTags = _selectedTags.asStateFlow()
 
+    private val _tagsTitle = MutableStateFlow<String?>(null)
+    val tagsTitle = _tagsTitle.asStateFlow()
+
     private var allTags: AllReviewTagsResponse? = null
-    private var reviewType = TYPE_VEHICLE
+    private var reviewType: ReviewType = ReviewType.VEHICLE
     private var lastRating = 5
 
-    fun setReviewType(type: String) {
+    fun setReviewType(type: ReviewType) {
         reviewType = type
         if (allTags != null) {
             updateTagsForRating(lastRating)
         }
+    }
+
+    fun setReviewType(type: String) {
+        setReviewType(
+            when (type) {
+                TYPE_USER -> ReviewType.USER
+                else -> ReviewType.VEHICLE
+            }
+        )
     }
 
     fun loadAllTags() {
@@ -84,10 +97,15 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
     private fun updateTagsForRating(rating: Int) {
         _selectedTags.value = emptySet()
         val tags = when (reviewType) {
-            TYPE_USER -> allTags?.user?.get(rating)
-            else -> allTags?.vehicle?.get(rating)
+            ReviewType.USER -> allTags?.user?.get(rating)
+            ReviewType.VEHICLE -> allTags?.vehicle?.get(rating)
         } ?: emptyList()
+        val title = when (reviewType) {
+            ReviewType.USER -> allTags?.userTitles?.get(rating)
+            ReviewType.VEHICLE -> allTags?.vehicleTitles?.get(rating)
+        }
         _availableTags.value = tags
+        _tagsTitle.value = title
     }
 
     fun toggleTag(code: String) {
@@ -172,17 +190,14 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
             errorMessage = null
 
             when (
-                val result = repository.createUserReview(
+                val result = repository.reviewCliente(
                     reviewedUserId,
                     rating,
                     _selectedTags.value.toList(),
                     comment
                 )
             ) {
-                is ApiResult.Success -> {
-                    loadUserReviews(reviewedUserId)
-                    onSuccess()
-                }
+                is ApiResult.Success -> onSuccess()
                 is ApiResult.Error -> errorMessage = result.message
             }
 

@@ -86,7 +86,7 @@ fun CarDetailScreen(
     val context = LocalContext.current
     val activity = context as ComponentActivity
     val vm: VehicleViewModel = viewModel(viewModelStoreOwner = activity)
-    val reviewVm: ReviewViewModel = viewModel()
+    val reviewVm: ReviewViewModel = viewModel(viewModelStoreOwner = activity)
     val rentalVm: RentalViewModel = viewModel()
     val vehicleId = carId.toLongOrNull()
     val detail = vm.vehicleDetail
@@ -138,6 +138,8 @@ fun CarDetailScreen(
             existingRental == null
     val canReviewAfterRental = canReview &&
             existingRental?.estado == RentalStatus.APROBADA
+    val alreadyReviewed = existingRental != null &&
+            reviewVm.vehicleReviews.any { it.reviewerId == existingRental.clienteId }
 
     val scrollState = rememberScrollState()
 
@@ -375,12 +377,16 @@ fun CarDetailScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Button(
                                 onClick = { vehicle?.id?.let { onNavigateToReview(it) } },
+                                enabled = !alreadyReviewed,
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Icon(Icons.Default.Star, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Reseñar este auto", fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = if (alreadyReviewed) "Ya calificaste" else "Reseñar este auto",
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
@@ -525,6 +531,7 @@ fun CarDetailScreen(
                         canReviewAfterRental -> {
                             Button(
                                 onClick = { vehicle?.id?.let { onNavigateToReview(it) } },
+                                enabled = !alreadyReviewed,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -539,7 +546,7 @@ fun CarDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Reseñar este auto",
+                                    text = if (alreadyReviewed) "Ya calificaste" else "Reseñar este auto",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
