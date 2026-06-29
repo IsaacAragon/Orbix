@@ -60,17 +60,9 @@ import java.util.Calendar
 @Composable
 fun SignUpScreen(
     onBack: () -> Unit,
-    onRegisterSuccess: (com.orbix.ui.model.AuthResponse) -> Unit,
+    onNavigateToTerms: () -> Unit,
     viewModel: SignUpViewModel = viewModel()
 ) {
-    var fullName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var telefono by remember { mutableStateOf("") }
-    var birthDateDisplay by remember { mutableStateOf("") }
-    var birthDateApi by remember { mutableStateOf<String?>(null) }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-
     var showPassword by remember { mutableStateOf(false) }
     var showConfirmPassword by remember { mutableStateOf(false) }
 
@@ -82,8 +74,8 @@ fun SignUpScreen(
     val datePickerDialog = DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
-            birthDateApi = toApiDate(dayOfMonth, month + 1, year)
-            birthDateDisplay = String.format("%02d/%02d/%d", dayOfMonth, month + 1, year)
+            viewModel.birthDateApi = toApiDate(dayOfMonth, month + 1, year)
+            viewModel.birthDateDisplay = String.format("%02d/%02d/%d", dayOfMonth, month + 1, year)
             viewModel.clearError()
         },
         today.get(Calendar.YEAR) - 25,
@@ -93,15 +85,15 @@ fun SignUpScreen(
         datePicker.maxDate = maxBirthDate.timeInMillis
     }
 
-    val isArrendador = isArrendadorEmail(email)
+    val isArrendador = isArrendadorEmail(viewModel.email)
 
-    val isFormValid = fullName.isNotBlank() &&
-            email.isNotBlank() &&
-            telefono.isNotBlank() &&
-            birthDateApi != null &&
-            password.isNotBlank() &&
-            confirmPassword.isNotBlank() &&
-            password == confirmPassword
+    val isFormValid = viewModel.fullName.isNotBlank() &&
+            viewModel.email.isNotBlank() &&
+            viewModel.telefono.isNotBlank() &&
+            viewModel.birthDateApi != null &&
+            viewModel.password.isNotBlank() &&
+            viewModel.confirmPassword.isNotBlank() &&
+            viewModel.password == viewModel.confirmPassword
 
     Scaffold(
         topBar = {
@@ -153,9 +145,9 @@ fun SignUpScreen(
 
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                value = fullName,
+                value = viewModel.fullName,
                 onValueChange = {
-                    fullName = it
+                    viewModel.fullName = it
                     viewModel.clearError()
                 },
                 label = { Text("Nombre completo") },
@@ -166,9 +158,9 @@ fun SignUpScreen(
 
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-                value = email,
+                value = viewModel.email,
                 onValueChange = {
-                    email = it
+                    viewModel.email = it
                     viewModel.clearError()
                 },
                 label = { Text("Correo electrónico") },
@@ -189,9 +181,9 @@ fun SignUpScreen(
 
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
-                value = telefono,
+                value = viewModel.telefono,
                 onValueChange = {
-                    telefono = it
+                    viewModel.telefono = it
                     viewModel.clearError()
                 },
                 label = { Text("Teléfono") },
@@ -204,7 +196,7 @@ fun SignUpScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     leadingIcon = { Icon(Icons.Default.Event, contentDescription = null) },
-                    value = birthDateDisplay,
+                    value = viewModel.birthDateDisplay,
                     onValueChange = {},
                     label = { Text("Fecha de nacimiento") },
                     modifier = Modifier.fillMaxWidth(),
@@ -220,9 +212,9 @@ fun SignUpScreen(
 
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                value = password,
+                value = viewModel.password,
                 onValueChange = {
-                    password = it
+                    viewModel.password = it
                     viewModel.clearError()
                 },
                 label = { Text("Contraseña") },
@@ -242,9 +234,9 @@ fun SignUpScreen(
 
             OutlinedTextField(
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                value = confirmPassword,
+                value = viewModel.confirmPassword,
                 onValueChange = {
-                    confirmPassword = it
+                    viewModel.confirmPassword = it
                     viewModel.clearError()
                 },
                 label = { Text("Confirmar contraseña") },
@@ -262,7 +254,7 @@ fun SignUpScreen(
                 }
             )
 
-            if (confirmPassword.isNotEmpty() && password != confirmPassword && viewModel.errorMessage == null) {
+            if (viewModel.confirmPassword.isNotEmpty() && viewModel.password != viewModel.confirmPassword && viewModel.errorMessage == null) {
                 Text(
                     text = "Las contraseñas no coinciden",
                     color = MaterialTheme.colorScheme.error,
@@ -282,17 +274,7 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = {
-                    viewModel.register(
-                        nombre = fullName,
-                        email = email,
-                        password = password,
-                        confirmPassword = confirmPassword,
-                        fechaNacimiento = birthDateApi,
-                        telefono = telefono.takeIf { it.isNotBlank() },
-                        onSuccess = onRegisterSuccess
-                    )
-                },
+                onClick = onNavigateToTerms,
                 enabled = isFormValid && !viewModel.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -310,7 +292,7 @@ fun SignUpScreen(
                     )
                 } else {
                     Text(
-                        text = "Crear cuenta",
+                        text = "Continuar",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )

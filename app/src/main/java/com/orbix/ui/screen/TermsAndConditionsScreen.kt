@@ -38,16 +38,21 @@ import androidx.compose.ui.unit.dp
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.orbix.ui.viewmodel.SignUpViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TermsAndConditionsScreen(
     onBack: () -> Unit,
-    onAccept: () -> Unit
+    onAccept: () -> Unit,
+    signUpViewModel: SignUpViewModel? = null,
+    onRegisterSuccess: ((com.orbix.ui.model.AuthResponse) -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
+
+    val isRegistrationLoading = signUpViewModel?.isLoading == true
 
     Scaffold(
         topBar = {
@@ -159,6 +164,18 @@ fun TermsAndConditionsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
+            signUpViewModel?.errorMessage?.let { error ->
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -167,11 +184,17 @@ fun TermsAndConditionsScreen(
             ) {
                 Button(
                     onClick = {
-                        scope.launch {
-                            isLoading = true
-                            delay(750)
-                            isLoading = false
-                            onAccept()
+                        if (signUpViewModel != null) {
+                            signUpViewModel.register(onSuccess = { authResponse ->
+                                onRegisterSuccess?.invoke(authResponse)
+                            })
+                        } else {
+                            scope.launch {
+                                isLoading = true
+                                delay(750)
+                                isLoading = false
+                                onAccept()
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -180,9 +203,9 @@ fun TermsAndConditionsScreen(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
-                    enabled = !isLoading
+                    enabled = !isLoading && !isRegistrationLoading
                 ) {
-                    if (isLoading) {
+                    if (isLoading || isRegistrationLoading) {
                         CircularProgressIndicator(
                             color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(24.dp)

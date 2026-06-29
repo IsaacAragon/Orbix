@@ -21,18 +21,21 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
         private set
 
     var errorMessage by mutableStateOf<String?>(null)
-        private set
+        set
+
+    // Form fields persisted across screen navigation
+    var fullName by mutableStateOf("")
+    var email by mutableStateOf("")
+    var telefono by mutableStateOf("")
+    var birthDateDisplay by mutableStateOf("")
+    var birthDateApi by mutableStateOf<String?>(null)
+    var password by mutableStateOf("")
+    var confirmPassword by mutableStateOf("")
 
     fun register(
-        nombre: String,
-        email: String,
-        password: String,
-        confirmPassword: String,
-        fechaNacimiento: String?,
-        telefono: String?,
         onSuccess: (AuthResponse) -> Unit
     ) {
-        validateRegister(email, password, confirmPassword, fechaNacimiento, telefono)?.let {
+        validateRegister(email, password, confirmPassword, birthDateApi, telefono)?.let {
             errorMessage = it
             return
         }
@@ -45,9 +48,9 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
                 val result = authRepository.register(
                     email = email,
                     password = password,
-                    nombre = nombre,
-                    telefono = telefono,
-                    fechaNacimiento = fechaNacimiento
+                    nombre = fullName,
+                    telefono = telefono.takeIf { it.isNotBlank() },
+                    fechaNacimiento = birthDateApi
                 )
             ) {
                 is AuthResult.Success -> onSuccess(result.response)
@@ -59,6 +62,17 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun clearError() {
+        errorMessage = null
+    }
+
+    fun clearForm() {
+        fullName = ""
+        email = ""
+        telefono = ""
+        birthDateDisplay = ""
+        birthDateApi = null
+        password = ""
+        confirmPassword = ""
         errorMessage = null
     }
 }

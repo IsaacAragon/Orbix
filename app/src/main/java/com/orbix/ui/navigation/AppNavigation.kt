@@ -20,6 +20,10 @@ import com.orbix.ui.screen.SignUpScreen
 import com.orbix.ui.util.AuthNavigation
 import com.orbix.ui.viewmodel.SessionState
 import com.orbix.ui.viewmodel.SessionViewModel
+import com.orbix.ui.screen.TermsAndConditionsScreen
+import com.orbix.ui.viewmodel.SignUpViewModel
+import androidx.activity.ComponentActivity
+import androidx.navigation.toRoute
 
 @Composable
 fun AppNavigation() {
@@ -47,6 +51,8 @@ fun AppNavigation() {
         }
 
         SessionState.Unauthenticated -> {
+            val activity = LocalContext.current as ComponentActivity
+            val signUpViewModel: SignUpViewModel = viewModel(viewModelStoreOwner = activity)
             NavHost(
                 navController = navController,
                 startDestination = Login
@@ -54,14 +60,34 @@ fun AppNavigation() {
                 composable<Login> {
                     LoginScreen(
                         onLogin = { response -> onAuthSuccess(response, false) },
-                        onNavigateToSignUp = { navController.navigate(SignUp) }
+                        onNavigateToSignUp = {
+                            signUpViewModel.clearForm()
+                            navController.navigate(SignUp)
+                        }
                     )
                 }
 
                 composable<SignUp> {
                     SignUpScreen(
                         onBack = { navController.popBackStack() },
-                        onRegisterSuccess = { response -> onAuthSuccess(response, true) }
+                        onNavigateToTerms = {
+                            navController.navigate(TermsAndConditions(isSignUpFlow = true))
+                        },
+                        viewModel = signUpViewModel
+                    )
+                }
+
+                composable<TermsAndConditions> { backStackEntry ->
+                    val route: TermsAndConditions = backStackEntry.toRoute()
+                    TermsAndConditionsScreen(
+                        onBack = { navController.popBackStack() },
+                        onAccept = {
+                            navController.popBackStack()
+                        },
+                        signUpViewModel = if (route.isSignUpFlow) signUpViewModel else null,
+                        onRegisterSuccess = { response ->
+                            onAuthSuccess(response, true)
+                        }
                     )
                 }
             }
